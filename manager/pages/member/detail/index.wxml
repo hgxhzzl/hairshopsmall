@@ -1,0 +1,187 @@
+<wxs module="fmt" src="/utils/filters.wxs" />
+<view class="page-wrapper" style="position:relative;">
+  <scroll-view scroll-y class="page-scroll" style="height:calc(100vh - 16rpx);">
+  <!-- 加载中 -->
+  <block wx:if="{{isMemberDetailLoading && !memberDetail}}">
+    <view class="empty-state-card">
+      <text class="empty-state-title">正在读取会员详情</text>
+      <text class="empty-state-text">会员资料、二维码和交易汇总正在加载中。</text>
+    </view>
+  </block>
+
+  <!-- 无数据 -->
+  <block wx:elif="{{!memberDetail}}">
+    <text wx:if="{{memberDetailError}}" class="error-text">{{memberDetailError}}</text>
+    <view class="empty-state-card">
+      <text class="empty-state-title">未获取到会员详情</text>
+      <text class="empty-state-text">请返回会员列表后重试。</text>
+    </view>
+  </block>
+
+  <!-- 会员详情 -->
+  <block wx:else>
+    <text wx:if="{{memberDetailError}}" class="error-text">{{memberDetailError}}</text>
+
+    <!-- 基本信息卡片 -->
+    <view class="base-card" style="display:flex;flex-direction:row;align-items:flex-start;">
+      <!-- 左侧：会员信息 -->
+      <view style="flex:1;min-width:0;">
+        <view class="card-title">{{memberDetail.name || '未命名会员'}}</view>
+        <view class="card-little-title">性别：{{memberDetail.gender || '未填写'}}</view>
+        <view class="card-little-title">注册：{{memberDetail.registerTimeText || '未记录'}}</view>
+        <view class="card-little-title">编号：{{memberDetail.memberNo || '未填写'}}</view>
+        <view class="card-little-title">电话：{{memberDetail.phone || '未填写'}}</view>
+        <view class="card-little-title">出生：{{memberDetail.birthDateText || '未填写'}}</view>
+        <view class="card-little-title">备注：{{memberDetail.remark || '暂无备注'}}</view>
+      </view>
+
+      <!-- 右侧：二维码（对齐 RN qrPanel 结构） -->
+      <view style="flex-shrink:0;margin-left:20rpx;width:256rpx;display:flex;flex-direction:column;align-items:center;">
+        <!-- 标题 -->
+        <text style="font-size:24rpx;font-weight:600;color:#64748b;margin-bottom:8rpx;">查询二维码</text>
+
+        <!-- QR 码框 -->
+        <view style="width:240rpx;height:240rpx;border-radius:16rpx;border:1rpx solid #e7ecf2;background:#fff;display:flex;align-items:center;justify-content:center;padding:0;box-sizing:border-box;overflow:hidden;">
+          <!-- 加载中 -->
+          <block wx:if="{{isQrLoading}}">
+            <text class="describe-text" style="font-size:22rpx;color:#94a3b8;">加载中...</text>
+          </block>
+          <!-- 有 QR 码：填满框内空间，aspectFit 居中 -->
+          <block wx:elif="{{qrImagePath}}">
+            <image src="{{qrImagePath}}" mode="aspectFit" style="width:240rpx;height:240rpx;" />
+          </block>
+          <!-- 无 QR 码（含手机号判断） -->
+          <block wx:else>
+            <text style="font-size:22rpx;color:#94a3b8;text-align:center;">{{memberDetail.phone ? '暂无二维码' : '未登记手机号'}}</text>
+          </block>
+        </view>
+
+       
+      </view>
+    </view>
+
+    <!-- 隐藏 canvas 用于生成二维码 -->
+    <canvas type="2d" id="qrCanvas" style="position:fixed;left:-9999px;width:280px;height:280px;"></canvas>
+
+    <!-- 账户数据卡片 -->
+    <view class="base-card">
+      <text class="card-title">账户数据</text>
+      <view class="metric-grid two-metric-grid">
+        <view class="metric-card">
+          <text class="metric-label">账户金额</text>
+          <text class="metric-value">{{fmt.money(memberDetail.balance)}}</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">套餐金额</text>
+          <text class="metric-value">{{fmt.money(memberDetail.prepaid)}}</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">累计充值</text>
+          <text class="metric-value">{{fmt.money(memberDetail.totalRechargeAmount)}}</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">累计消费</text>
+          <text class="metric-value">{{fmt.money(memberDetail.totalConsumptionAmount)}}</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">最近充值</text>
+          <text class="metric-value">{{memberDetail.lastRechargeAmount > 0 ? fmt.money(memberDetail.lastRechargeAmount) : '暂无'}}</text>
+          <text class="metric-label">{{memberDetail.lastRechargeTimeText || '无记录'}}</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">最近消费</text>
+          <text class="metric-value">{{memberDetail.lastConsumptionAmount > 0 ? fmt.money(memberDetail.lastConsumptionAmount) : '暂无'}}</text>
+          <text class="metric-label">{{memberDetail.lastConsumptionTimeText || '无记录'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 流水 Tab 切换 -->
+    <view class="base-card">
+      <view class="row-space-between">
+        <text class="card-title" bindtap="switchLedgerTab" data-tab="account" style="{{activeLedgerTab === 'account' ? 'border-bottom:4rpx solid #245c98;' : 'opacity:0.5;'}}">账户流水</text>
+        <text class="card-title" bindtap="switchLedgerTab" data-tab="prepaid" style="{{activeLedgerTab === 'prepaid' ? 'border-bottom:4rpx solid #245c98;' : 'opacity:0.5;'}}">套餐流水</text>
+      </view>
+
+      <!-- 账户流水 -->
+      <block wx:if="{{activeLedgerTab === 'account'}}">
+        <view class="ledger-card" style="margin-bottom:12rpx;">
+          <view class="ledger-card-top">
+            <text><text class="ledger-card-title">充值 </text><text class="ledger-card-amount amount-positive">+{{fmt.money(accountTotals.recharge)}}</text></text>
+            <text><text class="ledger-card-title">消费 </text><text class="ledger-card-amount amount-negative">-{{fmt.money(accountTotals.consume)}}</text></text>
+          </view>
+        </view>
+        <!-- 初值 -->
+        <view class="ledger-card" style="margin-bottom:12rpx;">
+          <view class="ledger-card-top">
+            <text class="ledger-card-title">账户初值</text>
+            <text class="ledger-card-amount amount-positive">+{{fmt.money(memberDetail.beginningBalance || 0)}}</text>
+          </view>
+          <view class="ledger-card-meta"><text class="ledger-card-date">初始余额</text></view>
+        </view>
+        <!-- 流水记录 -->
+        <block wx:if="{{accountRecords.length === 0}}">
+          <view class="empty-state-card">
+            <text class="empty-state-title">暂无账户流水</text>
+            <text class="empty-state-text">当前年度暂无账户充值与消费记录。</text>
+          </view>
+        </block>
+        <view wx:else>
+          <view class="ledger-card" wx:for="{{accountRecords}}" wx:key="id" style="margin-bottom:12rpx;">
+            <view class="ledger-card-top">
+              <text class="ledger-card-title">{{item.label}}</text>
+              <text class="ledger-card-amount {{item.isNegative ? 'amount-negative' : 'amount-positive'}}">{{item.amountText}}</text>
+            </view>
+            <view class="ledger-card-meta">
+              <text class="ledger-card-date">{{item.dateText}}</text>
+              <text class="ledger-card-date">账户余额 {{item.runningBalance >= 0 ? '+' : '-'}}{{fmt.money(fmt.abs(item.runningBalance))}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <!-- 套餐流水 -->
+      <block wx:if="{{activeLedgerTab === 'prepaid'}}">
+        <view class="ledger-card" style="margin-bottom:12rpx;">
+          <view class="ledger-card-top">
+            <text><text class="ledger-card-title">充值 </text><text class="ledger-card-amount amount-positive">+{{fmt.money(prepaidTotals.recharge)}}</text></text>
+            <text><text class="ledger-card-title">消费 </text><text class="ledger-card-amount amount-negative">-{{fmt.money(prepaidTotals.consume)}}</text></text>
+          </view>
+        </view>
+        <!-- 初值 -->
+        <view class="ledger-card" style="margin-bottom:12rpx;">
+          <view class="ledger-card-top">
+            <text class="ledger-card-title">套餐初值</text>
+            <text class="ledger-card-amount amount-positive">+{{fmt.money(memberDetail.beginningPrepaid || 0)}}</text>
+          </view>
+          <view class="ledger-card-meta"><text class="ledger-card-date">初始余额</text></view>
+        </view>
+        <!-- 流水记录 -->
+        <block wx:if="{{prepaidRecords.length === 0}}">
+          <view class="empty-state-card">
+            <text class="empty-state-title">暂无套餐流水</text>
+            <text class="empty-state-text">当前年度暂无套餐充值与消费记录。</text>
+          </view>
+        </block>
+        <view wx:else>
+          <view class="ledger-card" wx:for="{{prepaidRecords}}" wx:key="id" style="margin-bottom:12rpx;">
+            <view class="ledger-card-top">
+              <text class="ledger-card-title">{{item.label}}</text>
+              <text class="ledger-card-amount {{item.isNegative ? 'amount-negative' : 'amount-positive'}}">{{item.amountText}}</text>
+            </view>
+            <view class="ledger-card-meta">
+              <text class="ledger-card-date">{{item.dateText}}</text>
+              <text class="ledger-card-date">套餐余额 {{item.runningBalance >= 0 ? '+' : '-'}}{{fmt.money(fmt.abs(item.runningBalance))}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </block>
+
+    <view style="height:200rpx;"></view>
+  </scroll-view>
+  <view style="position:absolute;bottom:0rpx;left:8rpx;right:8rpx;padding:0 16rpx 0rpx;">
+    <button class="submit-button" bindtap="goBack">返回</button>
+  </view>
+</view>

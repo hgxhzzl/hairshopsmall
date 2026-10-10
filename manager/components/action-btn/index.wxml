@@ -1,0 +1,24 @@
+<!-- 使用 AppIcon SVG 的按钮（充值、消费） -->
+<view
+  wx:if="{{useAppIcon}}"
+  class="action-btn-custom{{disabled ? ' action-btn-disabled' : ''}}"
+  style="color:{{disabled ? '#c0c4cc' : btnColor}};border-color:{{disabled ? '#c0c4cc' : btnColor}};"
+  bindtap="onTap"
+>
+  <app-icon name="{{appIconName}}" size="{{iconSize}}rpx" color="{{disabled ? '#c0c4cc' : iconColor}}" />
+  <text class="action-btn-label" style="font-size:{{fontSize}}rpx;font-weight:{{fontWeight}};">{{label}}</text>
+</view>
+
+<!-- 使用 TDesign 图标字体的按钮（修改、删除、详情、选择） -->
+<t-button
+  wx:else
+  t-class="action-btn-rounded"
+  style="--td-button-extra-small-icon-font-size:{{iconSize}}rpx;--td-button-extra-small-font-size:{{fontSize}}rpx;--td-button-font-weight:{{fontWeight}};--td-button-default-outline-color:{{disabled ? '#c0c4cc' : btnColor}};--td-button-default-outline-border-color:{{disabled ? '#c0c4cc' : btnColor}};"
+  icon="{{icon}}"
+  content="{{label}}"
+  theme="{{theme}}"
+  variant="outline"
+  size="extra-small"
+  disabled="{{disabled}}"
+  bindtap="onTap"
+/>

@@ -1,0 +1,52 @@
+<view class="base-stack">
+  <view class="base-card">
+    <text class="card-title">用户注册信息</text>
+    <view class="field-block">
+      <text class="field-label">店铺名称</text>
+      <input class="field-info" value="{{shopName}}" bindinput="onShopNameInput" placeholder="请输入贵店名称" />
+    </view>
+    <view class="field-block border-top">
+      <text class="field-label">店主姓名</text>
+      <input class="field-info" value="{{ownerName}}" bindinput="onOwnerNameInput" placeholder="请输入店主姓名" />
+    </view>
+    <view class="field-block border-top">
+      <text class="field-label">店铺地址</text>
+      <input class="field-info" value="{{address}}" bindinput="onAddressInput" placeholder="请输入贵店地址" />
+    </view>
+    <view class="field-block border-top">
+      <text class="field-label">手机号码</text>
+      <input class="field-info" type="number" maxlength="11" value="{{phoneNumber}}" bindinput="onPhoneInput" placeholder="请输入手机号" />
+    </view>
+    <view class="field-block border-top">
+      <text class="field-label">登录密码</text>
+      <input class="field-info" type="password" value="{{password}}" bindinput="onPasswordInput" placeholder="请输入登录密码 (6位以上)" />
+    </view>
+    <view class="field-block border-top">
+      <text class="field-label">确认密码</text>
+      <input class="field-info" type="password" value="{{confirmPassword}}" bindinput="onConfirmPasswordInput" placeholder="请再次输入密码" />
+    </view>
+  </view>
+
+  <!-- 服务协议同意 -->
+  <view class="agreement-row" bindtap="toggleAgreed">
+    <view class="agreement-checkbox{{agreed ? ' agreement-checkbox-checked' : ''}}">
+      <text wx:if="{{agreed}}" class="agreement-checkmark">✓</text>
+    </view>
+    <view class="agreement-text-row">
+      <text class="agreement-text">我已阅读并同意</text>
+      <text class="agreement-link" catchtap="openServiceAgreement">《服务协议》</text>
+      <text class="agreement-text">和</text>
+      <text class="agreement-link" catchtap="openPrivacyPolicy">《隐私政策》</text>
+    </view>
+  </view>
+
+  <text wx:if="{{errorMessage}}" class="error-text">{{errorMessage}}</text>
+
+  <button class="submit-button"  style="margin-bottom: 10rpx;" bindtap="handleSubmit" disabled="{{!canSubmit || isSubmitting}}">
+    {{isSubmitting ? '注册中...' : '注册'}}
+  </button>
+
+  <view style="display:flex;justify-content:center;margin-top:16rpx;">
+    <text style="color:#6f8197;font-size:28rpx;" bindtap="goLogin">已有账号？返回登录</text>
+  </view>
+</view>

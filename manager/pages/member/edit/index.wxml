@@ -1,0 +1,92 @@
+<view class="base-stack">
+  <!-- 加载中 -->
+  <view wx:if="{{isLoading}}" class="empty-state-card">
+    <text class="empty-state-text">正在加载会员信息...</text>
+  </view>
+
+  <!-- 编辑表单 -->
+  <block wx:else>
+    <view class="base-card">
+      <text class="card-title">修改会员信息</text>
+
+      <!-- 会员姓名 -->
+      <view class="field-block">
+        <view class="field-row">
+          <text class="field-label">会员姓名</text>
+          <text class="field-count">{{memberName.length}}/10</text>
+        </view>
+        <input class="field-info" maxlength="10" bindinput="onNameInput" placeholder="请填写会员姓名" value="{{memberName}}" />
+      </view>
+
+      <!-- 性别 -->
+      <view class="field-block border-top">
+        <text class="field-label">性别</text>
+        <view class="field-row">
+          <view class="field-settings-toggle-group">
+            <text
+              class="field-settings-toggle-btn {{gender === '男' ? 'field-settings-toggle-btn-active' : ''}}"
+              bindtap="setGender"
+              data-gender="男"
+            >男</text>
+            <text
+              class="field-settings-toggle-btn {{gender === '女' ? 'field-settings-toggle-btn-active' : ''}}"
+              bindtap="setGender"
+              data-gender="女"
+            >女</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 会员编号 -->
+      <view wx:if="{{fieldVisibility.member_no}}" class="field-block border-top">
+        <view class="field-row">
+          <text class="field-label">会员编号</text>
+          <text class="field-count">{{memberNo.length}}/6</text>
+        </view>
+        <input class="field-info" type="number" maxlength="6" bindinput="onNoInput" placeholder="请填写会员编号" value="{{memberNo}}" />
+      </view>
+
+      <!-- 手机号码 -->
+      <view wx:if="{{fieldVisibility.phone_number}}" class="field-block border-top">
+        <text class="field-label">手机号码</text>
+        <input class="field-info" type="number" maxlength="11" bindinput="onPhoneInput" placeholder="请填写手机号" value="{{phone}}" />
+      </view>
+
+      <!-- 出生日期 -->
+      <view wx:if="{{fieldVisibility.birth_date}}" class="field-block border-top">
+        <text class="field-label">出生日期</text>
+        <picker mode="date" value="{{birthDate}}" bindchange="onBirthDateInput">
+          <view class="field-info" style="line-height:48rpx;">{{birthDate || '请选择出生日期'}}</view>
+        </picker>
+      </view>
+
+      <!-- 备注信息 -->
+      <view wx:if="{{fieldVisibility.remark}}" class="field-block border-top">
+        <view class="field-row">
+          <text class="field-label">备注信息</text>
+          <text class="field-count">{{remark.length}}/20</text>
+        </view>
+        <textarea class="field-info field-textarea" maxlength="20" bindinput="onRemarkInput" placeholder="请输入备注信息" value="{{remark}}" />
+      </view>
+
+      <!-- 注册日期 -->
+      <view class="field-block border-top">
+        <text class="field-label">注册日期</text>
+        <picker mode="date" value="{{registerDate}}" bindchange="onDateInput">
+          <view class="field-info" style="line-height:48rpx;">{{registerDate || '请选择注册日期'}}</view>
+        </picker>
+    </view>
+
+      <!-- 第三方个人信息录入告知 -->
+      <view class="field-block border-top">
+        <text class="describe-text">提示：请先向会员本人说明用途并取得同意后再录入其姓名、手机号等信息。</text>
+      </view>
+  </view>
+
+    <text wx:if="{{actionError}}" class="error-text">{{actionError}}</text>
+
+    <button class="submit-button" bindtap="handleSubmit" disabled="{{!canSubmit || isSubmitting}}">
+      {{isSubmitting ? '修改中...' : '确认修改'}}
+    </button>
+  </block>
+</view>

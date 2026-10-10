@@ -1,0 +1,57 @@
+{
+  "pages": [
+    "pages/login/index",
+    "pages/register/index",
+    "pages/forgot-password/index",
+    "pages/service-agreement/index",
+    "pages/privacy-policy/index",
+    "pages/dashboard/index",
+    "pages/member/list/index",
+    "pages/member/detail/index",
+    "pages/member/add/index",
+    "pages/member/edit/index",
+    "pages/member/field-settings/index",
+    "pages/recharge/list/index",
+    "pages/recharge/detail/index",
+    "pages/recharge/add/index",
+    "pages/recharge/edit/index",
+    "pages/consumption/list/index",
+    "pages/consumption/detail/index",
+    "pages/consumption/add/index",
+    "pages/consumption/edit/index",
+    "pages/common/select-member/index",
+    "pages/common/select-service/index",
+    "pages/me/index/index",
+    "pages/me/shop-info/index",
+    "pages/me/password/index",
+    "pages/me/phone/index",
+    "pages/me/service-settings/index",
+    "pages/me/service-add/index",
+    "pages/me/service-edit/index",
+    "pages/me/account-book/index",
+    "pages/me/cancellation/index",
+    "pages/me/pay-type-settings/index"
+  ],
+  "tabBar": {
+    "custom": true,
+    "color": "#666666",
+    "selectedColor": "#245c98",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/dashboard/index", "text": "首页" },
+      { "pagePath": "pages/member/list/index", "text": "会员" },
+      { "pagePath": "pages/recharge/list/index", "text": "充值" },
+      { "pagePath": "pages/consumption/list/index", "text": "消费" },
+      { "pagePath": "pages/me/index/index", "text": "我的" }
+    ]
+  },
+  "lazyCodeLoading": "requiredComponents",
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#245c98",
+    "navigationBarTitleText": "易顺通美发会员管家",
+    "navigationBarTextStyle": "white"
+  },
+  "sitemapLocation": "sitemap.json"
+}

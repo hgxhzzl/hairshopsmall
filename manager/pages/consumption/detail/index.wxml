@@ -1,0 +1,71 @@
+<wxs module="fmt" src="/utils/filters.wxs" />
+<view class="base-stack">
+  <block wx:if="{{isLoading && !detail}}"><view class="empty-state-card"><text class="empty-state-title">正在读取消费详情</text></view></block>
+  <block wx:elif="{{!detail}}"><text wx:if="{{error}}" class="error-text">{{error}}</text><view class="empty-state-card"><text class="empty-state-title">未获取到消费详情</text></view></block>
+  <block wx:else>
+    <!-- 会员信息 -->
+    <view class="base-card">
+      <text class="card-title">会员信息</text>
+      <view class="field-block">
+        <text class="field-label">会员信息:</text>
+        <view wx:if="{{member}}" class="field-row member-info-row">
+          <text class="member-name">{{member.name || detail.memberName || '未命名会员'}}</text>
+          <text wx:if="{{member.gender}}" class="member-gender-pill {{member.gender === '女' ? 'member-gender-pill-female' : 'tone-info-soft'}}">{{member.gender}}</text>
+          <text wx:if="{{member.memberNo}}" class="member-meta"># {{member.memberNo}}</text>
+          <text wx:if="{{member.phone}}" class="member-meta">☏ {{member.phone}}</text>
+        </view>
+        <view wx:else class="field-row member-info-row">
+          <text class="member-name">{{detail.memberName || '未命名会员'}}</text>
+          <text wx:if="{{detail.phone}}" class="member-meta">☏ {{detail.phone}}</text>
+        </view>
+      </view>
+      <view class="field-row-grid" wx:if="{{member}}">
+        <text class="field-label">{{isServiceMode ? '套餐余额:' : '账户余额:'}}</text>
+        <text class="field-amount">{{isServiceMode ? fmt.money(member.prepaid) : fmt.money(member.balance)}}</text>
+      </view>
+    </view>
+    <!-- 消费信息 -->
+    <view class="base-card">
+      <text class="card-title">消费信息</text>
+      <view class="field-row-grid">
+        <text class="field-label">业务类型:</text>
+        <text class="member-name">{{detail.payType === 0 ? '现金' : detail.payType === 1 ? '账户' : '服务'}}</text>
+      </view>
+      <view class="field-row-grid border-top">
+        <text class="field-label">消费金额:</text>
+        <text class="arrival-amount consumption-amount">{{fmt.money(detail.amount)}}</text>
+      </view>
+      <view wx:if="{{detail.payType !== 2}}" class="field-row-grid border-top">
+        <text class="field-label">实付金额:</text>
+        <text class="field-amount">{{fmt.money(detail.payAmount || 0)}}</text>
+      </view>
+      <view wx:if="{{detail.remark}}" class="field-row-grid border-top">
+        <text class="field-label">备注:</text>
+        <text>{{detail.remark}}</text>
+      </view>
+      <view class="field-row-grid border-top">
+        <text class="field-label">日期:</text>
+        <text class="date-text">{{dateText}}</text>
+      </view>
+    </view>
+    <!-- 服务项目 -->
+    <view class="base-card">
+      <text class="card-title">服务项目</text>
+      <text class="describe-text">已选 {{services.length}} 项</text>
+      <view wx:if="{{services.length > 0}}">
+        <view class="add-service-card" wx:for="{{services}}" wx:key="id">
+          <text class="service-item-name">{{item.name || item.itemName}}</text>
+          <view class="field-row service-price-row">
+            <text wx:if="{{item.normalPrice}}" class="describe-text">正常价 {{fmt.money(item.normalPrice)}}</text>
+            <text class="describe-text">会员价 <text class="list-card-amount">{{fmt.money(item.memberPrice || item.price || 0)}}</text></text>
+          </view>
+          <view class="row-space-between service-subtotal-row">
+            <text class="describe-text">小计 <text class="list-card-amount">{{fmt.money((item.memberPrice || item.price || 0) * item.count)}}</text></text>
+            <text class="service-quantity-text">x{{item.count}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+  <button class="submit-button" bindtap="goBack">返回</button>
+</view>

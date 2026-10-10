@@ -1,0 +1,102 @@
+<wxs module="fmt" src="/utils/filters.wxs" />
+<view class="base-stack">
+  <!-- 加载中 -->
+  <block wx:if="{{isLoading && !detail}}">
+    <view class="empty-state-card">
+      <text class="empty-state-title">正在读取充值详情</text>
+      <text class="empty-state-text">会员信息、充值信息与套餐内容正在加载中。</text>
+    </view>
+  </block>
+
+  <!-- 无数据 -->
+  <block wx:elif="{{!detail}}">
+    <text wx:if="{{detailError}}" class="error-text">{{detailError}}</text>
+    <view class="empty-state-card">
+      <text class="empty-state-title">未获取到充值详情</text>
+      <text class="empty-state-text">请返回充值列表后重试。</text>
+    </view>
+  </block>
+
+  <!-- 详情 -->
+  <block wx:else>
+    <text wx:if="{{detailError}}" class="error-text">{{detailError}}</text>
+
+    <!-- 会员信息 -->
+    <view class="base-card">
+      <text class="card-title">会员信息</text>
+      <view class="field-block">
+        <text class="field-label">会员信息:</text>
+        <view wx:if="{{member}}" class="field-row member-info-row">
+          <text class="member-name">{{member.name || detail.memberName || '未命名会员'}}</text>
+          <text wx:if="{{member.gender}}" class="member-gender-pill {{member.gender === '女' ? 'member-gender-pill-female' : 'tone-info-soft'}}">{{member.gender}}</text>
+          <text wx:if="{{member.memberNo}}" class="member-meta"># {{member.memberNo}}</text>
+          <text wx:if="{{member.phone}}" class="member-meta">☏ {{member.phone}}</text>
+        </view>
+        <view wx:else class="field-row member-info-row">
+          <text class="member-name">{{detail.memberName || '未命名会员'}}</text>
+          <text wx:if="{{detail.phone}}" class="member-meta">☏ {{detail.phone}}</text>
+        </view>
+      </view>
+      <view class="field-row-grid" wx:if="{{member}}">
+        <text class="field-label">{{isStoredMode ? '账户余额:' : '套餐余额:'}}</text>
+        <text class="field-amount">{{member ? (isStoredMode ? fmt.money(member.balance) : fmt.money(member.prepaid)) : '--'}}</text>
+      </view>
+    </view>
+
+    <!-- 充值信息 -->
+    <view class="base-card">
+      <text class="card-title">充值信息</text>
+      <view class="field-row-grid">
+        <text class="field-label">业务类型:</text>
+        <text class="member-name">{{isStoredMode ? '储值赠送' : '服务套餐'}}</text>
+      </view>
+      <view wx:if="{{!isStoredMode}}" class="field-row-grid border-top">
+        <text class="field-label">套餐总价:</text>
+        <text class="field-amount">{{fmt.money(detail.amount)}}</text>
+      </view>
+      <view wx:else>
+        <view class="field-block border-top">
+          <text class="field-label">充值本金</text>
+          <text class="field-amount">{{fmt.money(detail.amount)}}</text>
+        </view>
+        <view class="field-block border-top">
+          <text class="field-label">赠送金额:</text>
+          <text class="field-amount">{{fmt.money(detail.giftAmount || 0)}}</text>
+        </view>
+        <view class="field-block border-top">
+          <text class="field-label">到账金额:</text>
+          <text class="arrival-amount">{{fmt.money(arrivalAmount)}}</text>
+        </view>
+      </view>
+      <view class="field-row-grid border-top">
+        <text class="field-label">充值日期:</text>
+        <text class="date-text">{{dateText}}</text>
+      </view>
+    </view>
+
+    <!-- 套餐内容 (仅套餐模式) -->
+    <view wx:if="{{!isStoredMode}}" class="base-card">
+      <text class="card-title">套餐内容</text>
+      <text class="describe-text">已选 {{services.length}} 项，合计数量 {{serviceCount}}，套餐合计 <text class="list-card-amount">{{fmt.money(packageTotal)}}</text>，优惠金额 <text class="list-card-amount">{{fmt.money(totalDiscount)}}</text></text>
+      <view wx:if="{{services.length > 0}}">
+        <view class="add-service-card" wx:for="{{services}}" wx:key="id">
+          <text class="service-item-name">{{item.name}}</text>
+          <view class="field-row service-price-row">
+            <text wx:if="{{item.normalPrice}}" class="describe-text">正常价 {{fmt.money(item.normalPrice)}}</text>
+            <text class="describe-text">会员价 <text class="list-card-amount">{{fmt.money(item.memberPrice || 0)}}</text></text>
+          </view>
+          <view class="row-space-between service-subtotal-row">
+            <text class="describe-text">小计 <text class="list-card-amount">{{fmt.money((item.memberPrice || 0) * item.count)}}</text></text>
+            <text class="service-quantity-text">x{{item.count}}</text>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty-state-card">
+        <text class="empty-state-title">暂无服务项目</text>
+        <text class="empty-state-text">当前订单没有关联套餐服务。</text>
+      </view>
+    </view>
+  </block>
+
+  <button class="submit-button" bindtap="goBack">返回</button>
+</view>

@@ -1,0 +1,82 @@
+<wxs module="fmt" src="/utils/filters.wxs" />
+<view class="page-wrapper">
+  <view class="query-header">
+   <text wx:if="{{consumptionError}}" class="error-text">{{consumptionError}}</text>
+  <!-- 筛选卡片 -->
+  <view class="base-card">
+    <view class="row-space-between">
+      <text class="card-title">消费查询</text>
+      <view class="card-button" bindtap="navToAdd">新增消费</view>
+    </view>
+     <view class="describe-wrap">
+    <text class="describe-text">当前范围：{{datePresetLabel}} · {{rangeText}}</text>
+  </view>
+    <!-- 日期筛选 -->
+    <view class="query-filter-group" style="margin-top:16rpx;">
+      <view class="query-filter-chip-row">
+        <text
+          wx:for="{{datePresets}}" wx:key="key"
+          class="filter-chip {{datePreset === item.key ? 'is-active' : ''}}"
+          bindtap="setDatePreset" data-preset="{{item.key}}"
+        >{{item.label}}</text>
+      </view>
+    </view>
+    <!-- 类型筛选 -->
+    <view class="query-filter-group">
+      <text class="card-little-title">类型：</text>
+      <view class="query-filter-chip-row">
+        <text
+          wx:for="{{typeFilters}}" wx:key="key"
+          class="filter-chip {{typeFilter === item.key ? 'is-active' : ''}}"
+          bindtap="setTypeFilter" data-filter="{{item.key}}"
+        >{{item.label}}</text>
+      </view>
+    </view>
+  <view class="describe-wrap" style="margin-top:-20rpx;">
+    <text class="describe-text">
+      总金额：<text class="describe-strong">{{fmt.money(stats.totalAmount)}}</text>  所选时间段内共：<text class="describe-strong">{{stats.totalCount}}</text> 条
+    </text>
+  </view>
+  </view>
+  </view>
+  <!--<scroll-view scroll-y class="page-scroll"> -->
+  <scroll-view scroll-y class="page-scroll" style="height:calc(100vh - 370rpx);" bindscrolltolower="loadMoreConsumptions" lower-threshold="100">
+  <!-- 加载中 -->
+  <view wx:if="{{isLoading && filteredConsumptions.length === 0}}" class="empty-state-card">
+    <text class="empty-state-text">正在读取消费列表...</text>
+  </view>
+
+  <!-- 消费列表 -->
+  <block wx:elif="{{filteredConsumptions.length > 0}}">
+    <view>
+      <view class="base-card" wx:for="{{filteredConsumptions}}" wx:key="id">
+        <view class="row-space-between" style="align-items:baseline;">
+          <view style="display:flex;align-items:baseline;gap:12rpx;min-width:0;">
+            <text class="list-card-title" style="width:240rpx;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{item.memberName || '未知会员'}}</text>
+            <text class="describe-text" style="flex-shrink:0;">{{item._dateYMD}}</text>
+          </view>
+          <text class="list-card-title" style="color:#245c98;flex-shrink:0;">{{fmt.money(item.payAmount || item.amount)}}</text>
+        </view>
+        <view class="list-card-metric">
+          {{item.payType === 0 ? '现金' : item.payType === 1 ? '账户' : '服务'}} · 服务 {{item.serviceCount || 0}} 项 · {{item.primaryItemName || ''}}
+        </view>
+        <view class="list-card-actions" >
+          <action-btn type="delete" bind:tap="onDelete" data-id="{{item.id}}" />
+          <action-btn type="edit" bind:tap="onEdit" data-id="{{item.id}}" />
+          <action-btn type="detail" bind:tap="onDetail" data-id="{{item.id}}" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部加载状态 -->
+    <view wx:if="{{isLoadingMore}}" class="load-more-tip">正在加载更多...</view>
+    <view wx:elif="{{!hasMore}}" class="load-more-tip">— 已加载全部记录 —</view>
+  </block>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-state-card">
+    <text class="empty-state-title">暂无消费记录</text>
+    <text class="empty-state-text">当前筛选时间段内没有数据。</text>
+  </view>
+</scroll-view>
+</view>

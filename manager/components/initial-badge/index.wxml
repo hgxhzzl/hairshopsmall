@@ -1,0 +1,3 @@
+<view class="initial-badge {{sizeClass}} {{genderClass}}">
+  <text class="initial-badge-text {{textSizeClass}}">{{initial}}</text>
+</view>

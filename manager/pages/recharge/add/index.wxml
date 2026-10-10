@@ -1,0 +1,91 @@
+<wxs module="fmt" src="/utils/filters.wxs" />
+<view class="base-stack" >
+  <!-- 会员信息 -->
+  <view class="base-card">
+    <text class="card-title">会员信息</text>
+    <view class="field-block">
+      <text class="field-label">会员信息:</text>
+      <view wx:if="{{member}}" class="field-row member-info-row" bindtap="navToSelectMember">
+        <text class="member-name">{{member.name || '未命名会员'}}</text>
+        <text wx:if="{{member.gender}}" class="member-gender-pill {{member.gender === '女' ? 'member-gender-pill-female' : 'tone-info-soft'}}">{{member.gender}}</text>
+        <text wx:if="{{member.memberNo}}" class="member-meta"># {{member.memberNo}}</text>
+        <text wx:if="{{member.phone}}" class="member-meta">☏ {{member.phone}}</text>
+      </view>
+      <view wx:else class="selection-button field-row" bindtap="navToSelectMember">
+        <text class="selection-button-text selection-placeholder">请点击选择会员</text>
+        <text class="selection-arrow">›</text>
+      </view>
+    </view>
+    <view class="field-row-grid" wx:if="{{member}}">
+      <text class="field-label">{{mode === 'stored' ? '账户余额:' : '套餐余额:'}}</text>
+      <text class="field-amount">{{mode === 'stored' ? fmt.money(member.balance) : fmt.money(member.prepaid)}}</text>
+    </view>
+  </view>
+
+  <!-- 充值设置 -->
+  <view class="base-card">
+    <text class="card-title">充值设置</text>
+    <view class="field-block">
+      <text class="field-label">业务类型:</text>
+      <view class="filter-chips-row">
+        <text class="filter-chip {{mode === 'stored' ? 'is-active' : ''}}" bindtap="switchMode" data-mode="stored">储值赠送</text>
+        <text class="filter-chip {{mode === 'package' ? 'is-active' : ''}}" bindtap="switchMode" data-mode="package">服务套餐</text>
+      </view>
+    </view>
+    <view wx:if="{{mode === 'package'}}" class="field-block border-top">
+      <view class="field-row-grid">
+        <text class="field-label">套餐总价:</text>
+        <text class="field-amount">{{fmt.money(rechargeAmount)}}</text>
+      </view>
+    </view>
+    <view wx:else class="field-block border-top">
+      <text class="field-label">充值本金</text>
+      <input class="field-info {{rechargeAmount ? 'field-amount' : ''}}" type="digit" bindinput="onAmountInput" placeholder="请输入充值本金" value="{{rechargeAmount}}" />
+    </view>
+    <view wx:if="{{mode === 'stored'}}" class="field-block border-top">
+      <text class="field-label">赠送金额:</text>
+      <input class="field-info {{giftAmount !== '0' && giftAmount !== '' ? 'field-amount' : ''}}" type="digit" bindinput="onGiftInput" placeholder="请输入赠送金额" value="{{giftAmount}}" />
+    </view>
+    <view wx:if="{{mode === 'stored'}}" class="field-block border-top">
+      <text class="field-label">到账金额:</text>
+      <text class="arrival-amount">{{fmt.money(fmt.toNum(rechargeAmount) + fmt.toNum(giftAmount))}}</text>
+    </view>
+  </view>
+
+  <!-- 套餐内容 (仅套餐模式) -->
+  <view wx:if="{{mode === 'package'}}" class="base-card">
+    <view class="row-space-between">
+      <text class="card-title">套餐内容</text>
+      <view class="card-button" bindtap="navToSelectService">+ 添加服务</view>
+    </view>
+    <text class="describe-text">已选 {{serviceItems.length}} 项，合计 <text class="list-card-amount">{{fmt.money(packageTotal)}}</text></text>
+    <view wx:if="{{serviceItems.length > 0}}"  >
+      <view class="add-service-card" wx:for="{{serviceItems}}" wx:key="serviceId" wx:for-index="idx">
+        <text class="service-item-name">{{item.name}}<block wx:if="{{!item.name}}">服务 {{idx + 1}}</block></text>
+        <view class="field-row service-price-row">
+          <text wx:if="{{item.normalPrice}}" class="describe-text">正常价 {{fmt.money(item.normalPrice)}}</text>
+          <text class="describe-text">会员价 <text class="list-card-amount">{{fmt.money(item.memberPrice || 0)}}</text></text>
+        </view>
+        <view class="row-space-between service-subtotal-row">
+          <text class="describe-text">小计 <text class="list-card-amount">{{fmt.money((item.memberPrice || 0) * (fmt.toNum(item.quantity) || 1))}}</text></text>
+          <text class="service-quantity-text">x{{item.quantity || 1}}</text>
+        </view>
+        <view class="row-space-between service-actions-row">
+          <text class="list-card-button tone-info-soft" bindtap="changeQuantity" data-index="{{idx}}" data-delta="-1">- 减少</text>
+          <text class="list-card-button tone-info-soft" bindtap="changeQuantity" data-index="{{idx}}" data-delta="1">+ 增加</text>
+          <text class="list-card-button tone-danger-soft" bindtap="removeServiceItem" data-index="{{idx}}">删除</text>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="empty-state-card">
+      <text class="empty-state-title">暂无服务项目</text>
+      <text class="empty-state-text">点击右上角"添加服务"后再提交套餐</text>
+    </view>
+  </view>
+
+  <text wx:if="{{errorMessage}}" class="error-text">{{errorMessage}}</text>
+
+  <button class="submit-button" bindtap="handleSubmit" disabled="{{isSubmitting}}">
+    {{isSubmitting ? '提交中...' : (mode === 'stored' ? '确认储值' : '确认售卖套餐')}}
+  </button>
+</view>

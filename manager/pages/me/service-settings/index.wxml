@@ -1,0 +1,99 @@
+<view class="page-wrapper">
+  <view class="query-header">
+   <!-- 搜索与统计卡片 -->
+  <view class="base-card">
+    <view class="row-space-between">
+      <text class="card-title">服务查询</text>
+      <view class="card-button" bindtap="navToAddService">新增服务</view>
+    </view>
+    <!-- 搜索框 -->
+    <view class="query-input-field">
+      <t-icon name="search" size="36rpx" color="#99a5b5" />
+      <input
+        class="query-input-control"
+        bindinput="onSearchInput"
+        placeholder="输入服务名称"
+        value="{{searchText}}"
+      />
+      <t-icon
+        wx:if="{{searchText}}"
+        name="close" size="36rpx" color="#99a5b5"
+        bindtap="clearSearch"
+      />
+    </view>
+
+    <view class="describe-wrap">
+      <text class="describe-text">服务数量 <text class="describe-strong">{{services.length}}</text>，可用 <text class="describe-strong">{{availableCount}}</text> 项 / 停用 <text class="describe-strong">{{disabledCount}}</text> 项</text>
+      <text class="describe-text">当前筛选 <text class="describe-strong">{{filteredServices.length}}</text> 项服务</text>
+    </view>
+    <text wx:if="{{actionError}}" class="error-text">{{actionError}}</text>
+    <text wx:if="{{actionMessage}}" class="describe-text">{{actionMessage}}</text>
+  </view>
+  </view>
+   <!--<scroll-view scroll-y class="page-scroll"> -->
+  <scroll-view scroll-y class="page-scroll" style="height:calc(100vh - 180rpx);">
+
+  <!-- 加载中 -->
+  <view wx:if="{{isServiceLoading}}" class="empty-state-card">
+     <text class="empty-state-text">服务项目加载中...</text>
+  </view>
+  <!-- 服务列表 -->
+  <block wx:elif="{{filteredServices.length > 0}}">
+    <view>
+      <view class="base-card" wx:for="{{filteredServices}}" wx:key="id">
+        <view class="list-card-head">
+          <view class="list-card-avatar-wrap">
+            <initial-badge value="{{item.name}}" fallback="服" size="md" />
+          </view>
+          <view class="list-card-content">
+            <view class="row-space-between">
+              <text class="list-card-title">{{item.name}}</text>
+              <text class="status-chip {{item.status === 0 ? 'status-chip-info' : 'status-chip-warn'}}">{{item.status === 0 ? '可用' : '停用'}}</text>
+            </view>
+            <view class="list-card-metric">
+              <text>正常价</text>
+              <text class="describe-strong">¥{{item._normalPrice}}</text>
+            </view>
+            <view class="list-card-metric">
+              <text>会员价</text>
+              <text class="list-card-amount">¥{{item._memberPrice}}</text>
+              <text class="describe-text">省 ¥{{item._savePrice}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="list-card-actions">
+          <action-btn type="delete" bind:tap="showDeleteConfirm" data-service="{{item}}" />
+          <action-btn type="edit" bind:tap="navToEditService" data-service="{{item}}" />
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="empty-state-card">
+      <text class="empty-state-title">暂无匹配服务</text>
+      <text class="empty-state-text">先新增一个服务项目，后续充值与消费都可直接复用。</text>
+    </view>
+  </block>
+</scroll-view>
+</view>
+
+<view wx:if="{{pendingDelete}}" class="sheet-backdrop" bindtap="hideDeleteConfirm">
+  <view class="service-confirm-sheet" catchtap="">
+    <view class="service-confirm-card">
+      <text class="card-title">删除确认</text>
+      <text class="list-card-title">{{pendingDelete.name}}</text>
+      <text class="describe-text">删除后，这个服务项目将无法在新的充值单和消费单中继续选择。</text>
+      <view class="service-confirm-meta">
+        <text>门市价 ¥{{pendingDelete._normalPrice}}</text>
+        <text>会员价 ¥{{pendingDelete._memberPrice}}</text>
+      </view>
+      <view class="base-stack">
+        <button class="primary-button service-confirm-danger" bindtap="handleDeleteService" disabled="{{isDeletingId === pendingDelete.id}}">
+          {{isDeletingId === pendingDelete.id ? '删除中...' : '确认删除'}}
+        </button>
+        <button class="ghost-button service-confirm-cancel" bindtap="hideDeleteConfirm">取消</button>
+      </view>
+    </view>
+  </view>
+</view>

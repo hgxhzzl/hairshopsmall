@@ -1,0 +1,4 @@
+.base-stack {
+  padding: 16rpx;
+  padding-bottom: 120rpx;
+}

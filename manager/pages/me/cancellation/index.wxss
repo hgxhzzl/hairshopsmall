@@ -1,0 +1,110 @@
+.tip-text {
+  display: block;
+  margin-top: 12rpx;
+  color: #7d8289;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.status-row {
+  margin: 12rpx 0 4rpx;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 20rpx;
+  border-radius: 999rpx;
+  background: #fff4e5;
+  color: #b7791f;
+  font-size: 26rpx;
+}
+
+.impact-item {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 12rpx;
+}
+
+.impact-dot {
+  color: #245c98;
+  font-size: 30rpx;
+  line-height: 1.4;
+}
+
+.reason-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  padding: 20rpx 16rpx;
+  border-radius: 16rpx;
+  border: 1px solid transparent;
+}
+
+.reason-item-active {
+  background: #f4f8fd;
+  border-color: #245c98;
+}
+
+.reason-radio {
+  flex-shrink: 0;
+  width: 32rpx;
+  height: 32rpx;
+  margin-top: 6rpx;
+  border-radius: 50%;
+  border: 2rpx solid #c4ccd6;
+  box-sizing: border-box;
+}
+
+.reason-radio-active {
+  border: 10rpx solid #245c98;
+}
+
+.reason-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.reason-label {
+  color: #4f5359;
+  font-size: 30rpx;
+}
+
+.reason-desc {
+  color: #99a5b5;
+  font-size: 24rpx;
+}
+
+.withdraw-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96rpx;
+  margin-top: 20rpx;
+  border-radius: 16rpx;
+  background: #ffffff;
+  border: 1px solid #245c98;
+  color: #245c98;
+  font-size: 30rpx;
+}
+
+.withdraw-button::after {
+  border: none;
+}
+
+.withdraw-button[disabled] {
+  opacity: 0.6;
+}
+
+.cancel-link {
+  margin-top: 16rpx;
+  text-align: center;
+  color: #99a5b5;
+  font-size: 26rpx;
+}
+
+.danger-submit {
+  background: #c0392b;
+  color: #ffffff;
+}

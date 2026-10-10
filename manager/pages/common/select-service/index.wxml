@@ -1,0 +1,73 @@
+<wxs module="fmt" src="/utils/filters.wxs" />
+<view class="page-wrapper">
+  <view class="query-header">
+  <view class="base-card">
+    <view class="row-space-between">
+      <text class="card-title">服务查询</text>
+    </view>
+    <view class="query-input-field">
+      <t-icon name="search" size="36rpx" color="#99a5b5" />
+      <input
+        class="query-input-control"
+        bindinput="onSearchInput"
+        placeholder="输入服务名称"
+        value="{{searchText}}"
+      />
+      <t-icon
+        wx:if="{{searchText}}"
+        name="close" size="36rpx" color="#99a5b5"
+        bindtap="clearSearch"
+      />
+    </view>
+    <view class="describe-wrap">
+      <text class="describe-text">当前筛选 <text class="describe-strong">{{filteredServices.length}}</text> 项服务</text>
+    </view>
+  </view>
+  </view>
+  <!--<scroll-view scroll-y class="page-scroll"> -->
+  <scroll-view scroll-y class="page-scroll" style="height:calc(100vh - 190rpx);">
+
+  <view wx:if="{{serviceError}}" class="empty-state-card"><text class="error-text">{{serviceError}}</text></view>
+
+  <block wx:elif="{{filteredServices.length > 0}}">
+    <view>
+      <view class="base-card" wx:for="{{filteredServices}}" wx:key="id">
+        <view class="list-card-head">
+          <view class="list-card-avatar-wrap">
+            <initial-badge value="{{item.name}}" fallback="服" size="md" />
+          </view>
+          <view class="list-card-content">
+            <view class="row-space-between">
+              <text class="list-card-title">{{item.name || '未命名服务'}}</text>
+              <text class="status-chip status-chip-info">可用</text>
+            </view>
+            <view class="list-card-metric">
+              <text>正常价</text>
+              <text class="describe-strong">{{fmt.money(item.normalPrice)}}</text>
+            </view>
+            <view class="list-card-metric">
+              <text>会员价</text>
+              <text class="list-card-amount">{{fmt.money(item.memberPrice)}}</text>
+              <text class="describe-text">省 {{fmt.money(item.normalPrice - item.memberPrice)}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="list-card-actions">
+          <action-btn type="select" bind:tap="onSelectService" data-id="{{item.id}}" data-name="{{item.name}}" />
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:elif="{{isServiceLoading}}">
+    <view class="empty-state-card"><text class="empty-state-text">正在读取服务列表...</text></view>
+  </block>
+
+  <block wx:else>
+    <view class="empty-state-card">
+      <text class="empty-state-title">{{searchText ? '暂无匹配服务' : '暂无可用服务'}}</text>
+      <text class="empty-state-text"><block wx:if="{{searchText}}">当前搜索条件为"{{searchText}}"，没有匹配的服务。</block><block wx:else>还没有添加可用的服务项目，请先在服务管理中新增。</block></text>
+    </view>
+  </block>
+</scroll-view>
+</view>

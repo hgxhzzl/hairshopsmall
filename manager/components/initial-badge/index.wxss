@@ -1,0 +1,41 @@
+.initial-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  background: #dceafc;
+  color: #245c98;
+}
+
+.initial-badge-md {
+  width: 96rpx;
+  height: 96rpx;
+}
+
+.initial-badge-lg {
+  width: 140rpx;
+  height: 140rpx;
+}
+
+.initial-badge-text {
+  font-weight: 500;
+  line-height: 1;
+}
+
+.initial-badge-text-md {
+  font-size: 44rpx;
+}
+
+.initial-badge-text-lg {
+  font-size: 56rpx;
+}
+
+.initial-badge-male {
+  background: #e6f0ff;
+  color: #32628f;
+}
+
+.initial-badge-female {
+  background: #ffe7d1;
+  color: #c37725;
+}

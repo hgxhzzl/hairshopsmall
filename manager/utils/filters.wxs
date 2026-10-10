@@ -1,0 +1,56 @@
+/**
+ * WXS 格式化工具 — 用于 WXML 中的数值/日期格式化
+ * WXML 不支持 .toFixed() 等 JS 方法，需通过 WXS 模块桥接
+ */
+function toFixed(val, digits) {
+  var d = digits || 2;
+  var num = parseFloat(val);
+  if (isNaN(num)) return '0.00';
+  return num.toFixed(d);
+}
+
+function abs(val) {
+  var num = parseFloat(val);
+  if (isNaN(num)) return 0;
+  return num < 0 ? -num : num;
+}
+
+function money(val) {
+  var num = parseFloat(val);
+  if (isNaN(num)) return '¥0.00';
+  return '¥' + num.toFixed(2);
+}
+
+function toNum(val) {
+  var num = parseFloat(val);
+  return isNaN(num) ? 0 : num;
+}
+
+function dateYMD(val) {
+  if (!val) return '';
+  var s = String(val);
+  // 过滤占位符如 "yyyy-mm-dd"
+  if (s.indexOf('yyyy') >= 0) return '';
+  // 至少需要10个字符（YYYY-MM-DD）
+  if (s.length < 10) return '';
+  // 位置4和7必须是横杠
+  if (s.charAt(4) !== '-' || s.charAt(7) !== '-') return '';
+  // 校验年月日位置（0-3,5-6,8-9）全为数字
+  var pos = [0, 1, 2, 3, 5, 6, 8, 9];
+  for (var i = 0; i < pos.length; i++) {
+    var c = s.charAt(pos[i]);
+    if (c < '0' || c > '9') return '';
+  }
+  // 拼接返回 YYYY-MM-DD
+  return s.charAt(0) + s.charAt(1) + s.charAt(2) + s.charAt(3) + '-' +
+         s.charAt(5) + s.charAt(6) + '-' +
+         s.charAt(8) + s.charAt(9);
+}
+
+module.exports = {
+  toFixed: toFixed,
+  abs: abs,
+  money: money,
+  toNum: toNum,
+  dateYMD: dateYMD
+};

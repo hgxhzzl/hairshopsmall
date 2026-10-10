@@ -1,0 +1,65 @@
+<wxs module="fmt" src="/utils/filters.wxs" />
+<view class="base-stack">
+  <view class="base-card">
+    <text class="card-title">会员信息</text>
+    <view class="field-block">
+      <text class="field-label">会员信息:</text>
+      <view wx:if="{{member}}" class="field-row member-info-row" bindtap="navToSelectMember">
+        <text class="member-name">{{member.name || '未命名会员'}}</text>
+        <text wx:if="{{member.gender}}" class="member-gender-pill {{member.gender === '女' ? 'member-gender-pill-female' : 'tone-info-soft'}}">{{member.gender}}</text>
+        <text wx:if="{{member.memberNo}}" class="member-meta"># {{member.memberNo}}</text>
+        <text wx:if="{{member.phone}}" class="member-meta">☏ {{member.phone}}</text>
+      </view>
+      <view wx:else class="selection-button field-row" bindtap="navToSelectMember"><text class="selection-button-text selection-placeholder">请点击选择会员</text><text class="selection-arrow">›</text></view>
+    </view>
+    <view wx:if="{{member && payType !== '0'}}" class="field-row-grid">
+      <text class="field-label">{{payType === '2' ? '套餐余额:' : '账户余额:'}}</text>
+      <text class="field-amount">{{payType === '2' ? fmt.money(member.prepaid) : fmt.money(member.balance)}}</text>
+    </view>
+  </view>
+  <view class="base-card">
+    <text class="card-title">消费信息</text>
+    <view class="field-block"><text class="field-label">业务类型:</text>
+      <view class="filter-chips-row">
+        <text wx:if="{{showCash}}" class="filter-chip {{payType === '0' ? 'is-active' : ''}}" bindtap="switchPayType" data-type="0">现金</text>
+        <text wx:if="{{showAccount}}" class="filter-chip {{payType === '1' ? 'is-active' : ''}}" bindtap="switchPayType" data-type="1">账户</text>
+        <text wx:if="{{showService}}" class="filter-chip {{payType === '2' ? 'is-active' : ''}}" bindtap="switchPayType" data-type="2">服务</text>
+      </view>
+    </view>
+    <view class="field-block border-top"><text class="field-label">实际消费:</text>
+      <block wx:if="{{payType === '2'}}">
+        <text class="field-amount">{{fmt.money(payAmount || packageTotal)}}</text>
+      </block>
+      <input wx:else class="field-info {{payAmount ? 'field-amount' : ''}}" type="digit" bindinput="onAmountInput" placeholder="请输入实际消费金额" value="{{payAmount}}" />
+    </view>
+    <view class="field-block border-top"><text class="field-label">备注:</text><input class="field-info" bindinput="onRemarkInput" placeholder="请输入备注" value="{{remark}}" maxlength="100" /></view>
+  </view>
+  <view class="base-card">
+    <view class="row-space-between"><text class="card-title">服务项目</text><view wx:if="{{payType !== '2'}}" class="card-button" bindtap="navToSelectService">+ 添加服务</view></view>
+    <text class="describe-text">{{payType === '2' ? '已选服务' : '已选'}} {{serviceItems.length}} 项<block wx:if="{{payType === '2'}}">，共 {{totalUsageCount}} 次</block>，消费合计 <text class="list-card-amount">{{fmt.money(packageTotal)}}</text><block wx:if="{{payType === '2' && totalDiscount > 0}}">，预计优惠 <text class="list-card-amount">{{fmt.money(totalDiscount)}}</text></block></text>
+    <view wx:if="{{serviceItems.length > 0}}">
+      <view class="add-service-card" wx:for="{{serviceItems}}" wx:key="serviceId" wx:for-index="idx">
+        <view class="row-space-between">
+          <text class="service-item-name">{{item.name}}<block wx:if="{{!item.name}}">服务 {{idx+1}}</block></text>
+          <view wx:if="{{payType === '2' && item.entitlementCount}}" class="entitlement-pill"><text class="entitlement-pill-text">权益{{item.entitlementCount}}次/使用{{item.quantity || 1}}次</text></view>
+        </view>
+        <view class="field-row service-price-row">
+          <text wx:if="{{item.normalPrice}}" class="describe-text">正常价 {{fmt.money(item.normalPrice)}}</text>
+          <text class="describe-text">会员价 <text class="list-card-amount">{{fmt.money(item.memberPrice || 0)}}</text></text>
+        </view>
+        <view class="row-space-between service-subtotal-row">
+          <text class="describe-text">小计 <text class="list-card-amount">{{fmt.money((item.memberPrice || 0) * (fmt.toNum(item.quantity) || 1))}}</text></text>
+          <text class="service-quantity-text">x{{item.quantity || 1}}</text>
+        </view>
+        <view class="row-space-between service-actions-row">
+          <text class="list-card-button tone-info-soft" bindtap="changeQty" data-index="{{idx}}" data-delta="-1">- 减少</text>
+          <text class="list-card-button tone-info-soft" bindtap="changeQty" data-index="{{idx}}" data-delta="1">+ 增加</text>
+          <text class="list-card-button tone-danger-soft" bindtap="removeService" data-index="{{idx}}">删除</text>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="empty-state-card"><text class="empty-state-title">{{!memberId ? '请先选择会员' : '暂无消费项目'}}</text></view>
+  </view>
+  <text wx:if="{{error}}" class="error-text">{{error}}</text>
+  <button class="submit-button" bindtap="handleSubmit" disabled="{{isSubmitting || balanceExceeded}}">{{isSubmitting ? '提交中...' : balanceExceeded ? '余额不足' : '确认消费'}}</button>
+</view>

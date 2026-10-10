@@ -1,0 +1,52 @@
+<view class="base-stack">
+  <view class="base-card">
+   <text class="card-title">新增服务项目</text>
+    <view class="field-block">
+      <view class="field-row">
+        <text class="field-label">服务名称</text>
+        <text class="field-count">{{name.length}}/10</text>
+      </view>
+      <input class="field-info" value="{{name}}" bindinput="onNameInput" placeholder="请必填写服务名称" maxlength="10" />
+    </view>
+
+    <view class="field-block border-top">
+      <view class="field-row">
+        <text class="field-label">会员价格</text>
+        <text class="field-count">最大 999.99</text>
+      </view>
+      <input class="field-info" type="digit" value="{{memberPrice}}" bindinput="onMemberPriceInput" placeholder="0.00" maxlength="6" />
+    </view>
+
+    <view class="field-block border-top">
+      <view class="field-row">
+        <text class="field-label">正常价格</text>
+        <text class="field-count">最大 999.99</text>
+      </view>
+      <input class="field-info" type="digit" value="{{normalPrice}}" bindinput="onNormalPriceInput" placeholder="0.00" maxlength="6" />
+    </view>
+
+    <view class="field-block border-top">
+      <text class="field-label">服务状态</text>
+      <view class="field-row">
+        <view class="field-settings-toggle-group">
+          <text
+            class="field-settings-toggle-btn {{status === 0 ? 'field-settings-toggle-btn-active' : ''}}"
+            bindtap="setStatus"
+            data-status="{{0}}"
+          >可用</text>
+          <text
+            class="field-settings-toggle-btn {{status === 1 ? 'field-settings-toggle-btn-active' : ''}}"
+            bindtap="setStatus"
+            data-status="{{1}}"
+          >停用</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <text wx:if="{{actionError}}" class="error-text">{{actionError}}</text>
+
+  <button class="submit-button" bindtap="handleSubmit" disabled="{{!canSubmit || isSubmitting}}">
+    {{isSubmitting ? '新增中...' : '确认新增'}}
+  </button>
+</view>

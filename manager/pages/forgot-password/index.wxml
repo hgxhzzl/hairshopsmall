@@ -1,0 +1,19 @@
+<view class="base-stack">
+  <view class="base-card">
+    <text class="card-title">重置登录密码</text>
+    <text class="describe-text" style="display:block;margin-top:8rpx;">为保障账号安全，登录密码不支持在应用内自助重置。若您忘记原密码，请联系服务人员，核实店主身份后办理重置。</text>
+  </view>
+
+  <view class="base-card">
+    <text class="card-title">联系服务人员</text>
+    <view class="row-space-between" style="margin-top:16rpx;" bindtap="handleCallSupport">
+      <text class="card-little-title">{{supportPhone}}</text>
+      <text class="card-button">拨打电话</text>
+    </view>
+    <text class="describe-text" style="display:block;margin-top:12rpx;">致电时请提供注册手机号与店铺名称，便于核对身份。</text>
+  </view>
+
+  <view style="display:flex;justify-content:center;margin-top:16rpx;">
+    <text style="color:#6f8197;font-size:28rpx;" bindtap="goLogin">返回登录</text>
+  </view>
+</view>

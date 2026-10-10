@@ -1,0 +1,87 @@
+<wxs module="fmt" src="/utils/filters.wxs" />
+<view class="page-wrapper">
+  <view class="query-header">
+  <text wx:if="{{rechargeError}}" class="error-text">{{rechargeError}}</text>
+
+  <!-- 筛选卡片 -->
+  <view class="base-card">
+    <view class="row-space-between">
+      <text class="card-title">充值查询</text>
+      <view class="card-button" bindtap="navToAdd">新增充值</view>
+    </view>
+     <view class="describe-wrap">
+    <text class="describe-text">当前范围：{{datePresetLabel}} · {{rangeText}}</text>
+</view>
+    <!-- 日期筛选 -->
+    <view class="query-filter-group" style="margin-top:16rpx;">
+      <view class="query-filter-chip-row">
+        <text
+          wx:for="{{datePresets}}" wx:key="key"
+          class="filter-chip {{datePreset === item.key ? 'is-active' : ''}}"
+          bindtap="setDatePreset" data-preset="{{item.key}}"
+        >{{item.label}}</text>
+      </view>
+    </view>
+
+    <!-- 类型筛选 -->
+    <view class="query-filter-group">
+      <text class="card-little-title">类型：</text>
+      <view class="query-filter-chip-row">
+        <text
+          wx:for="{{benefitFilters}}" wx:key="key"
+          class="filter-chip {{benefitFilter === item.key ? 'is-active' : ''}}"
+          bindtap="setBenefitFilter" data-filter="{{item.key}}"
+        >{{item.label}}</text>
+      </view>
+    </view>
+<view class="describe-wrap" style="margin-top:-20rpx;">
+    <text class="describe-text">
+      总金额：<text class="describe-strong">{{fmt.money(stats.totalAmount)}}</text>   所选时间段内共：<text class="describe-strong">{{stats.totalCount}}</text> 条
+    </text>
+  </view>
+  </view>
+  </view>
+   <!--<scroll-view scroll-y class="page-scroll"> -->
+  <scroll-view scroll-y class="page-scroll" style="height:calc(100vh - 370rpx);" bindscrolltolower="loadMoreRecharges" lower-threshold="100">
+
+  <!-- 加载中 -->
+  <view wx:if="{{isRechargeLoading && filteredRecharges.length === 0}}" class="empty-state-card">
+    <text class="empty-state-text">正在读取充值列表...</text>
+  </view>
+
+  <!-- 充值列表 -->
+  <block wx:elif="{{filteredRecharges.length > 0}}">
+    <view>
+      <view class="base-card" wx:for="{{filteredRecharges}}" wx:key="id">
+        <view class="row-space-between" style="align-items:baseline;">
+          <view style="display:flex;align-items:baseline;gap:12rpx;min-width:0;">
+            <text class="list-card-title" style="width:240rpx;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{item.memberName || '未命名会员'}}</text>
+            <text class="describe-text" style="flex-shrink:0;">{{item._dateYMD}}</text>
+          </view>
+          <text class="list-card-title" style="color:#245c98;flex-shrink:0;">{{fmt.money(item.amount)}}</text>
+        </view>
+        <view class="list-card-metric">
+          {{item.benefitType === 0 ? '服务套餐' : '储值赠送'}}：
+          <block wx:if="{{item.benefitType === 0}}">服务 {{item.serviceItemCount || 0}} 项 · 权益 {{item.entitlementCount || 0}} 次 · 已使用 {{item.entitlementUsedCount || 0}} 次</block>
+          <block wx:else>赠送 {{fmt.toFixed(item.giftAmount || 0, 2)}}</block>
+        </view>
+        <view class="list-card-actions" >
+          <action-btn type="delete" disabled="{{item.entitlementUsedCount > 0}}" bind:tap="onDeleteRecharge" data-id="{{item.id}}" />
+          <action-btn type="edit" disabled="{{item.entitlementUsedCount > 0}}" bind:tap="onOpenEdit" data-id="{{item.id}}" />
+          <action-btn type="detail" bind:tap="onOpenDetail" data-id="{{item.id}}" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部加载状态 -->
+    <view wx:if="{{isLoadingMore}}" class="load-more-tip">正在加载更多...</view>
+    <view wx:elif="{{!hasMore}}" class="load-more-tip">— 已加载全部记录 —</view>
+  </block>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-state-card">
+    <text class="empty-state-title">暂无充值记录</text>
+    <text class="empty-state-text">当前筛选时间段内没有数据。</text>
+  </view>
+</scroll-view>
+</view>

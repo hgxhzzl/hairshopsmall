@@ -1,0 +1,25 @@
+<view class="base-stack">
+  <view class="base-card">
+    <text class="card-title">账本预览</text>
+    <text wx:if="{{bookName}}" class="mono-text">{{bookName}}</text>
+  </view>
+
+  <view wx:if="{{isLoading}}" class="empty-state-card">
+    <text class="empty-state-text">正在加载账本...</text>
+  </view>
+
+  <block wx:elif="{{loadError}}">
+    <view class="empty-state-card">
+      <text class="error-text">账本加载失败，请稍后重试。</text>
+      <button class="submit-button" bindtap="handleBack" style="margin-top:24rpx;">返回</button>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view wx:if="{{pdfPath}}" class="base-card">
+      <text class="card-title">账本已就绪</text>
+      <text wx:if="{{pageCount > 0}}" class="describe-text">共 {{pageCount}} 页</text>
+      <button class="submit-button" bindtap="handleOpenAgain" style="margin-top:16rpx;">打开/查看账本</button>
+    </view>
+  </block>
+</view>

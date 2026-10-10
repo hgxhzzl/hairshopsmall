@@ -1,0 +1,8 @@
+<view class="base-stack">
+  <view class="base-card" wx:for="{{sections}}" wx:key="title">
+    <text class="agreement-section-title">{{item.title}}</text>
+    <text class="agreement-section-text">{{item.text}}</text>
+  </view>
+
+  <button class="submit-button" bindtap="handleAgree">{{readonly ? '返回' : '同意并继续'}}</button>
+</view>

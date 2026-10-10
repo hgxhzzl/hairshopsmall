@@ -1,0 +1,23 @@
+<view class="base-stack">
+  <view class="base-card">
+    <text class="card-title">修改密码</text>
+    <view class="field-block">
+      <text class="field-label">原有密码</text>
+      <input class="field-info" type="password" value="{{oldPassword}}" bindinput="onOldInput" placeholder="请输入原有密码" />
+    </view>
+    <view class="field-block border-top">
+      <text class="field-label">新密码</text>
+      <input class="field-info" type="password" value="{{newPassword}}" bindinput="onNewInput" placeholder="请输入新密码 (6位以上)" />
+    </view>
+    <view class="field-block border-top">
+      <text class="field-label">确认新密码</text>
+      <input class="field-info" type="password" value="{{confirmPassword}}" bindinput="onConfirmInput" placeholder="请再次输入新密码" />
+    </view>
+  </view>
+
+  <text wx:if="{{actionError}}" class="error-text">{{actionError}}</text>
+
+  <button class="submit-button" bindtap="handleSubmit" disabled="{{!canSubmit || isSubmitting}}">
+    {{isSubmitting ? '修改中...' : '确认修改'}}
+  </button>
+</view>

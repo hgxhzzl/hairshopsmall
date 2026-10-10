@@ -1,0 +1,9 @@
+{
+  "name": "hairshop-manager",
+  "version": "1.0.0",
+  "description": "美发店管理小程序 (B端)",
+  "main": "app.js",
+  "dependencies": {
+    "qrcode-generator": "^2.0.4"
+  }
+}

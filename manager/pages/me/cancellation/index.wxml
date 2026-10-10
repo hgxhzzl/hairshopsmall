@@ -1,0 +1,123 @@
+<view class="base-stack">
+  <view wx:if="{{loading}}" class="base-card">
+    <text class="describe-text">加载中...</text>
+  </view>
+
+  <!-- 已有进行中的申请：展示进度与撤回入口 -->
+  <block wx:elif="{{request && request.isActive}}">
+    <view class="base-card">
+      <text class="card-title">注销申请处理中</text>
+      <view class="status-row">
+        <text class="status-badge">{{request.statusText}}</text>
+      </view>
+      <view class="field-block">
+        <text class="field-label">申请原因</text>
+        <text class="describe-text">{{request.reasonLabel}}{{request.reasonText ? '（' + request.reasonText + '）' : ''}}</text>
+      </view>
+      <view class="field-block border-top">
+        <text class="field-label">提交时间</text>
+        <text class="describe-text">{{request.createTimeText}}</text>
+      </view>
+      <view wx:if="{{request.contactTimeText}}" class="field-block border-top">
+        <text class="field-label">核实时间</text>
+        <text class="describe-text">{{request.contactTimeText}}</text>
+      </view>
+      <text class="describe-text tip-text">{{request.status === 0 ? '服务人员将在 3 个工作日内致电您的登录手机号核实身份，请保持畅通。' : '身份已核实完成，服务人员将安排删除数据。删除后不可恢复，如系误操作请尽快致电我们。'}}</text>
+    </view>
+
+    <view class="base-card">
+      <text class="card-title">撤回申请</text>
+      <text class="describe-text tip-text">数据实际删除前，您都可以撤回本次注销申请。撤回需验证当前登录密码。</text>
+
+      <block wx:if="{{showWithdraw}}">
+        <view class="field-block border-top">
+          <text class="field-label">登录密码</text>
+          <input class="field-info" value="{{withdrawPassword}}" bindinput="onWithdrawInput" password="{{true}}" placeholder="请输入当前登录密码" />
+        </view>
+        <text wx:if="{{withdrawError}}" class="error-text">{{withdrawError}}</text>
+        <button class="withdraw-button" bindtap="handleConfirmWithdraw" disabled="{{!withdrawPassword || isWithdrawing}}">
+          {{isWithdrawing ? '撤回中...' : '确认撤回'}}
+        </button>
+        <view class="cancel-link" bindtap="handleCancelWithdraw">暂不撤回</view>
+      </block>
+      <button wx:else class="withdraw-button" bindtap="handleOpenWithdraw">撤回注销申请</button>
+    </view>
+  </block>
+
+  <!-- 无进行中申请：展示注销说明与申请表单 -->
+  <block wx:else>
+    <view wx:if="{{request}}" class="base-card">
+      <text class="card-title">上一次申请</text>
+      <text class="describe-text">状态：{{request.statusText}}{{request.handleNote ? '（' + request.handleNote + '）' : ''}}</text>
+      <text class="describe-text tip-text">该申请已结束，您可以重新提交。</text>
+    </view>
+
+    <view class="base-card">
+      <text class="card-title">注销后会发生什么</text>
+      <view class="impact-item">
+        <text class="impact-dot">·</text>
+        <text class="describe-text">本店铺的会员、充值、消费记录及经营账本将被全部删除，删除后不可恢复。</text>
+      </view>
+      <view class="impact-item">
+        <text class="impact-dot">·</text>
+        <text class="describe-text">当前登录手机号将被解绑，账号无法再登录本应用。</text>
+      </view>
+      <view class="impact-item">
+        <text class="impact-dot">·</text>
+        <text class="describe-text">会员尚未使用的充值余额属于您与会员之间的线下事务，请先与会员协商处理完毕后再提交注销。</text>
+      </view>
+      <view class="impact-item">
+        <text class="impact-dot">·</text>
+        <text class="describe-text">建议先前往「我的 - 经营账本」生成并保存对账凭证，再提交本申请。</text>
+      </view>
+      <view class="impact-item">
+        <text class="impact-dot">·</text>
+        <text class="describe-text">受理后 3 个工作日内服务人员将致电核实身份，核实确认后 7 个工作日内完成数据删除；删除前您可随时撤回。</text>
+      </view>
+    </view>
+
+    <view class="base-card">
+      <text class="card-title">选择注销原因</text>
+      <view
+        wx:for="{{reasons}}"
+        wx:key="code"
+        class="reason-item {{selectedCode === item.code ? 'reason-item-active' : ''}}"
+        data-code="{{item.code}}"
+        bindtap="handleSelectReason"
+      >
+        <view class="reason-radio {{selectedCode === item.code ? 'reason-radio-active' : ''}}"></view>
+        <view class="reason-text">
+          <text class="reason-label">{{item.label}}</text>
+          <text class="reason-desc">{{item.desc}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{selectedCode === 'other'}}" class="field-block border-top">
+        <view class="field-row">
+          <text class="field-label">补充说明</text>
+          <text class="field-count">{{reasonText.length}}/{{200}}</text>
+        </view>
+        <textarea class="field-info field-textarea" value="{{reasonText}}" bindinput="onReasonTextInput" maxlength="200" placeholder="请简要说明您的情况" />
+      </view>
+
+      <view class="field-block border-top">
+        <text class="field-label">登录密码</text>
+        <input class="field-info" value="{{password}}" bindinput="onPasswordInput" password="{{true}}" placeholder="请输入当前登录密码以确认是本人操作" />
+      </view>
+
+      <text wx:if="{{actionError}}" class="error-text">{{actionError}}</text>
+
+      <button class="submit-button danger-submit" bindtap="handleSubmit" disabled="{{!canSubmit || isSubmitting}}">
+        {{isSubmitting ? '提交中...' : '提交注销申请'}}
+      </button>
+    </view>
+  </block>
+
+  <view class="base-card">
+    <text class="card-title">有疑问？</text>
+    <view class="row-space-between" style="margin-top:16rpx;" bindtap="handleCallSupport">
+      <text class="card-little-title">联系服务人员：{{supportPhone}}</text>
+      <text class="card-button">拨打电话</text>
+    </view>
+  </view>
+</view>

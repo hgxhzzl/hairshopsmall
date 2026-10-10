@@ -1,0 +1,101 @@
+<wxs module="fmt" src="/utils/filters.wxs" />
+<view class="page-wrapper">
+  <scroll-view scroll-y class="page-scroll" style="height:calc(100vh - 16rpx);padding-bottom:170rpx;">
+  <!-- 错误提示 -->
+  <text wx:if="{{dashboardError}}" class="error-text">{{dashboardError}}</text>
+
+  <!-- 加载中 -->
+  <view wx:if="{{isLoading && !dashboard}}" class="empty-state-card">
+    <text class="empty-state-text">正在加载首页数据...</text>
+  </view>
+
+  <!-- 仪表盘内容 -->
+  <block wx:if="{{dashboard}}">
+    <!-- 店铺信息卡片 -->
+    <view class="base-card">
+      <view class="card-title">{{shop.shopName || '未命名店铺'}}</view>
+      <view class="card-little-title">店主：{{shop.ownerName || '未填写'}}</view>
+      <view class="card-little-title">地址：{{shop.address || '未填写'}}</view>
+      <view class="overview-pill-row">
+        <text class="pill-tag tone-info-soft">会员 {{dashboard.totalMembers}} 人</text>
+        <text class="pill-tag tone-warn-soft">本月新增 {{dashboard.monthNewMembers}} 人</text>
+      </view>
+    </view>
+
+    <!-- 今日经营焦点 -->
+    <view class="base-card">
+      <text class="card-title">今日经营焦点</text>
+      <view class="metric-grid two-metric-grid">
+        <view class="metric-card">
+          <text class="metric-label">今日营业额</text>
+          <text class="metric-value">{{fmt.money(dashboard.todayRevenue)}}</text>
+          <text class="metric-label">消费 {{dashboard.todayConsumptionCount}} 笔</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">今日充值额</text>
+          <text class="metric-value">{{fmt.money(dashboard.todayRecharge)}}</text>
+          <text class="metric-label">充值 {{dashboard.todayRechargeCount}} 笔</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">今日账户消费</text>
+          <text class="metric-value">{{fmt.money(dashboard.todayAccountConsumption)}}</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">今日储值充值</text>
+          <text class="metric-value">{{fmt.money(dashboard.todayStorageRecharge)}}</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">今日服务消费</text>
+          <text class="metric-value">{{fmt.money(dashboard.todayServiceConsumption)}}</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">今日套餐充值</text>
+          <text class="metric-value">{{fmt.money(dashboard.todayPackageRecharge)}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 本月经营概览 -->
+    <view class="base-card">
+      <text class="card-title">本月经营概览</text>
+      <view class="metric-grid two-metric-grid" >
+        <view class="metric-card">
+          <text class="metric-label">本月营业额</text>
+          <text class="metric-value">{{fmt.money(dashboard.monthRevenue)}}</text>
+          <text class="metric-label">消费 {{dashboard.monthConsumptionCount}} 笔</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">本月充值额</text>
+          <text class="metric-value">{{fmt.money(dashboard.monthRecharge)}}</text>
+          <text class="metric-label">充值 {{dashboard.monthRechargeCount}} 笔</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">本月账户消费</text>
+          <text class="metric-value">{{fmt.money(dashboard.monthAccountConsumption)}}</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">本月储值充值</text>
+          <text class="metric-value">{{fmt.money(dashboard.monthStorageRecharge)}}</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">本月服务消费</text>
+          <text class="metric-value">{{fmt.money(dashboard.monthServiceConsumption)}}</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">本月套餐充值</text>
+          <text class="metric-value">{{fmt.money(dashboard.monthPackageRecharge)}}</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">本月新增会员</text>
+          <text class="metric-value">{{dashboard.monthNewMembers}} 人</text>
+        </view>
+        <view class="metric-card">
+          <text class="metric-label">本月活跃会员</text>
+          <text class="metric-value">{{dashboard.monthActiveMembers}} 人</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  </scroll-view>
+</view>

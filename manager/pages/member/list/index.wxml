@@ -1,0 +1,87 @@
+<wxs module="fmt" src="/utils/filters.wxs" />
+<view class="page-wrapper">
+  <view class="query-header">
+  <!-- 错误提示 -->
+  <text wx:if="{{memberError}}" class="error-text">{{memberError}}</text>
+
+  <!-- 搜索与统计卡片 -->
+  <view class="base-card">
+    <view class="row-space-between">
+      <text class="card-title">会员查询</text>
+      <view class="card-button" bindtap="navToAddMember">新增会员</view>
+    </view>
+
+    <!-- 搜索框 -->
+    <view class="query-input-field">
+      <t-icon name="search" size="36rpx" color="#99a5b5" />
+      <input
+        class="query-input-control"
+        bindinput="onSearchInput"
+        placeholder="输入姓名/编号/手机号"
+        value="{{memberSearchText}}"
+      />
+      <t-icon
+        wx:if="{{memberSearchText}}"
+        name="close" size="36rpx" color="#99a5b5"
+        bindtap="onClearSearch"
+      />
+    </view>
+    <view class="describe-wrap">
+      <text class="describe-text">会员：<text class="describe-strong">{{memberStats.totalCount}}</text> 人 / 男：<text class="describe-strong">{{memberGenderStats.maleCount}}</text> 人 / 女：<text class="describe-strong">{{memberGenderStats.femaleCount}}</text> 人</text>
+      <text class="describe-text">账户总额：<text class="describe-strong">{{fmt.money(memberStats.totalBalance)}}</text> 套餐总额：<text class="describe-strong">{{fmt.money(memberStats.totalPrepaid)}}</text></text>
+    </view>
+  </view>
+  </view>
+  <!--<scroll-view scroll-y class="page-scroll"> -->
+  <scroll-view scroll-y class="page-scroll" style="height:calc(100vh - 290rpx);">
+
+  <!-- 加载中 -->
+  <view wx:if="{{isMemberLoading && members.length === 0}}" class="empty-state-card">
+    <text class="empty-state-text">正在读取会员列表...</text>
+  </view>
+  <!-- 会员列表 -->
+  <block wx:elif="{{filteredMembers.length > 0}}">
+    <view>
+      <view class="base-card" wx:for="{{filteredMembers}}" wx:key="id">
+        <view class="list-card-head">
+          <view bindtap="onOpenMemberDetail" data-id="{{item.id}}">
+            <initial-badge value="{{item.name}}" fallback="会" gender="{{item.gender}}" />
+          </view>
+          <view class="list-card-content">
+            <view class="row-space-between">
+              <text class="list-card-title" >{{item.name || '未命名会员'}}</text>
+              <text class="member-gender-pill {{item.gender === '女' ? 'member-gender-pill-female' : 'tone-info-soft'}}">{{item.gender || '-'}}</text>
+            </view>
+            <view class="row-space-between list-card-info-row">
+              <view class="list-card-metric">
+                <text>账户余额</text>
+                <text class="list-card-amount">{{fmt.money(item.balance)}}</text>
+              </view>
+              <text class="list-card-metric list-card-meta"># {{item.memberNo || '未设'}}</text>
+            </view>
+            <view class="row-space-between list-card-info-row">
+              <view class="list-card-metric">
+                <text>套餐余额</text>
+                <text class="list-card-amount">{{fmt.money(item.prepaid)}}</text>
+              </view>
+              <text class="list-card-metric list-card-meta">☏ {{item.phone || '未填写'}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="list-card-actions">
+          <action-btn type="delete" bind:tap="onDeleteMember" data-id="{{item.id}}" />
+          <action-btn type="edit" bind:tap="onEditMember" data-id="{{item.id}}" />
+          <action-btn type="recharge" bind:tap="onRechargeForMember" data-id="{{item.id}}" />
+          <action-btn type="consume" bind:tap="onConsumptionForMember" data-id="{{item.id}}" />
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-state-card">
+    <text class="empty-state-title">{{memberSearchText ? '暂无匹配会员' : '暂无会员'}}</text>
+    <text class="empty-state-text">{{memberSearchText ? '当前搜索条件没有匹配的会员。' : '还没有添加任何会员。'}}</text>
+  </view>
+</scroll-view>
+</view>

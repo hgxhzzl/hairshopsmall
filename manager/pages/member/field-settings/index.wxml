@@ -1,0 +1,38 @@
+<view class="base-stack">
+  <view class="base-card">
+    <view class="card-title">会员字段设置</view>
+    <view class="card-little-title">设置字段是否在新增、修改展示</view>
+    <view class="describe-text" style="margin-top:12rpx;">
+      已开启字段：<text class="describe-strong">{{enabledCount}}</text>
+    </view>
+
+    <block wx:for="{{fieldDefinitions}}" wx:key="key">
+      <view class="field-block {{index === 0 ? '' : 'border-top'}}">
+        <text class="field-label">{{item.label}}</text>
+        <view class="field-row">
+          <text class="describe-text">{{item.description}}</text>
+          <view class="field-settings-toggle-group">
+            <text
+              class="field-settings-toggle-btn {{!fieldVisibility[item.key] ? 'field-settings-toggle-btn-active' : ''}}"
+              bindtap="handleVisibilityChange"
+              data-key="{{item.key}}"
+              data-visible="{{false}}"
+            >否</text>
+            <text
+              class="field-settings-toggle-btn {{fieldVisibility[item.key] ? 'field-settings-toggle-btn-active' : ''}}"
+              bindtap="handleVisibilityChange"
+              data-key="{{item.key}}"
+              data-visible="{{true}}"
+            >是</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <text wx:if="{{actionError}}" class="error-text" style="margin-top:16rpx;">{{actionError}}</text>
+  </view>
+
+  <button class="submit-button" bindtap="handleSave" disabled="{{!canSubmit || isSaving}}">
+    {{isSaving ? '保存中...' : '保存设置'}}
+  </button>
+</view>

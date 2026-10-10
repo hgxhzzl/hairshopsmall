@@ -1,0 +1,38 @@
+<view class="base-stack">
+  <view class="base-card">
+    <text class="card-title">编辑店铺资料</text>
+
+    <!-- 1. 店铺名称 -->
+    <view class="field-block">
+      <view class="field-row">
+        <text class="field-label">店铺名称</text>
+        <text class="field-count">{{shopName.length}}/{{10}}</text>
+      </view>
+      <input class="field-info" value="{{shopName}}" bindinput="onShopNameInput" placeholder="请必填写店铺名称" maxlength="10" />
+    </view>
+
+    <!-- 2. 店铺地址 -->
+    <view class="field-block border-top">
+      <view class="field-row">
+        <text class="field-label">店铺地址</text>
+        <text class="field-count">{{address.length}}/{{40}}</text>
+      </view>
+      <textarea class="field-info field-textarea" value="{{address}}" bindinput="onAddressInput" placeholder="请必填写店铺详细地址" maxlength="40" />
+    </view>
+
+    <!-- 3. 店主姓名 -->
+    <view class="field-block border-top">
+      <view class="field-row">
+        <text class="field-label">店主姓名</text>
+        <text class="field-count">{{ownerName.length}}/{{10}}</text>
+      </view>
+      <input class="field-info" value="{{ownerName}}" bindinput="onOwnerNameInput" placeholder="请必填写店主姓名" maxlength="10" />
+    </view>
+  </view>
+
+  <text wx:if="{{actionError}}" class="error-text">{{actionError}}</text>
+
+  <button class="submit-button" bindtap="handleSubmit" disabled="{{!canSubmit || isSubmitting}}">
+    {{isSubmitting ? '修改中...' : '确认修改'}}
+  </button>
+</view>

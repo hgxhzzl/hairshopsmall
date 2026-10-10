@@ -1,0 +1,68 @@
+<wxs module="fmt" src="/utils/filters.wxs" />
+<view class="base-stack">
+  <view wx:if="{{isLoading}}" class="empty-state-card"><text class="empty-state-text">正在加载消费信息...</text></view>
+  <block wx:else>
+    <!-- 会员信息 -->
+    <view class="base-card">
+      <text class="card-title">会员信息</text>
+      <view class="field-block">
+        <text class="field-label">会员信息:</text>
+        <view wx:if="{{member}}" class="field-row member-info-row">
+          <text class="member-name">{{member.name || detail.memberName || '未命名会员'}}</text>
+          <text wx:if="{{member.gender}}" class="member-gender-pill {{member.gender === '女' ? 'member-gender-pill-female' : 'tone-info-soft'}}">{{member.gender}}</text>
+          <text wx:if="{{member.memberNo}}" class="member-meta"># {{member.memberNo}}</text>
+          <text wx:if="{{member.phone}}" class="member-meta">☏ {{member.phone}}</text>
+        </view>
+        <view wx:else class="field-row member-info-row">
+          <text class="member-name">{{detail.memberName || '未命名会员'}}</text>
+          <text wx:if="{{detail.phone}}" class="member-meta">☏ {{detail.phone}}</text>
+        </view>
+      </view>
+      <view class="field-row-grid" wx:if="{{member}}">
+        <text class="field-label">{{payType === '2' ? '套餐余额:' : '账户余额:'}}</text>
+        <text class="field-amount">{{payType === '2' ? fmt.money(member.prepaid) : fmt.money(member.balance)}}</text>
+      </view>
+    </view>
+    <!-- 消费信息 -->
+    <view class="base-card">
+      <text class="card-title">消费信息</text>
+      <view class="field-row-grid">
+        <text class="field-label">业务类型:</text>
+        <text class="member-name">{{payType === '0' ? '现金' : payType === '1' ? '账户' : '服务'}}</text>
+      </view>
+      <view wx:if="{{payType !== '2'}}" class="field-block border-top">
+        <text class="field-label">实付金额:</text>
+        <input class="field-info {{payAmount ? 'field-amount' : ''}}" type="digit" bindinput="onAmountInput" placeholder="请输入实际消费金额" value="{{payAmount}}" />
+      </view>
+      <view class="field-block border-top">
+        <text class="field-label">备注:</text>
+        <input class="field-info" bindinput="onRemarkInput" placeholder="请输入备注" value="{{remark}}" maxlength="100" />
+      </view>
+    </view>
+    <!-- 服务项目 -->
+    <view class="base-card">
+      <view class="row-space-between"><text class="card-title">服务项目</text><view class="card-button" bindtap="navToSelectService">+ 添加服务</view></view>
+      <text class="describe-text">{{payType === '2' ? '已选服务' : '已选'}} {{serviceItems.length}} 项，合计 <text class="list-card-amount">{{fmt.money(packageTotal)}}</text></text>
+      <view wx:if="{{serviceItems.length > 0}}">
+        <view class="add-service-card" wx:for="{{serviceItems}}" wx:key="serviceId" wx:for-index="idx">
+          <text class="service-item-name">{{item.name}}<block wx:if="{{!item.name}}">服务 {{idx+1}}</block></text>
+          <view class="field-row service-price-row">
+            <text wx:if="{{item.normalPrice}}" class="describe-text">正常价 {{fmt.money(item.normalPrice)}}</text>
+            <text class="describe-text">会员价 <text class="list-card-amount">{{fmt.money(item.memberPrice || 0)}}</text></text>
+          </view>
+          <view class="row-space-between service-subtotal-row">
+            <text class="describe-text">小计 <text class="list-card-amount">{{fmt.money((item.memberPrice || 0) * (fmt.toNum(item.quantity) || 1))}}</text></text>
+            <text class="service-quantity-text">x{{item.quantity || 1}}</text>
+          </view>
+          <view class="row-space-between service-actions-row">
+            <text class="list-card-button tone-info-soft" bindtap="changeQty" data-index="{{idx}}" data-delta="-1">- 减少</text>
+            <text class="list-card-button tone-info-soft" bindtap="changeQty" data-index="{{idx}}" data-delta="1">+ 增加</text>
+            <text class="list-card-button tone-danger-soft" bindtap="removeService" data-index="{{idx}}">删除</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    <text wx:if="{{error}}" class="error-text">{{error}}</text>
+    <button class="submit-button" bindtap="handleSubmit" disabled="{{isSubmitting}}">{{isSubmitting ? '保存中...' : '确认修改'}}</button>
+  </block>
+</view>
