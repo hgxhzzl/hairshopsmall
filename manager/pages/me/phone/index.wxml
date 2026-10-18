@@ -5,13 +5,59 @@
       <text class="field-label">当前手机号</text>
       <text class="describe-text">{{currentPhone || '未设置'}}</text>
     </view>
-    <text class="describe-text">为保障账号安全，登录手机号不支持在应用内自助修改。如需变更，请由服务人员核实店主身份后办理。</text>
+    <text class="describe-text">为保障账号安全，变更登录手机号需同时验证旧号与新号：旧号验证码证明账号持有人身份，新号验证码确保新号码可用。</text>
   </view>
+
+  <view wx:if="{{currentPhone}}" class="base-card">
+    <text class="card-title">① 验证原手机号</text>
+    <view class="field-block border-top">
+      <text class="field-label">短信验证码</text>
+      <view class="code-row">
+        <input class="field-info code-input" type="number" maxlength="6" value="{{oldCode}}" bindinput="onOldCodeInput" placeholder="6 位验证码" />
+        <text wx:if="{{!oldCooldown}}" class="card-button" bindtap="handleSendOldCode">获取验证码</text>
+        <text wx:else class="card-button code-disabled">{{oldCooldown}}s 后重发</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{currentPhone}}" class="base-card">
+    <text class="card-title">② 设置新手机号</text>
+    <view class="field-block">
+      <text class="field-label">新手机号</text>
+      <input class="field-info" type="number" maxlength="11" value="{{newPhone}}" bindinput="onNewPhoneInput" placeholder="请输入 11 位新手机号" />
+    </view>
+    <view class="field-block border-top">
+      <text class="field-label">短信验证码</text>
+      <view class="code-row">
+        <input class="field-info code-input" type="number" maxlength="6" value="{{newCode}}" bindinput="onNewCodeInput" placeholder="6 位验证码" />
+        <text wx:if="{{!newCooldown}}" class="card-button" bindtap="handleSendNewCode">获取验证码</text>
+        <text wx:else class="card-button code-disabled">{{newCooldown}}s 后重发</text>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{currentPhone}}" class="base-card">
+    <view class="field-block">
+      <text class="field-label">变更原因（选填）</text>
+      <input class="field-info" value="{{remark}}" bindinput="onRemarkInput" placeholder="如：原号停用 / 换人接手" maxlength="100" />
+    </view>
+  </view>
+
+  <text wx:if="{{actionError}}" class="error-text">{{actionError}}</text>
+
+  <button
+    wx:if="{{currentPhone}}"
+    class="submit-button"
+    bindtap="handleSubmit"
+    disabled="{{!canSubmit || isSubmitting}}"
+  >
+    {{isSubmitting ? '提交中...' : '确认修改手机号'}}
+  </button>
 
   <view class="base-card">
     <text class="card-title">联系服务人员</text>
     <view class="row-space-between" style="margin-top:16rpx;" bindtap="handleCallSupport">
-      <text class="card-little-title">如需变更登录手机号，请联系服务人员</text>
+      <text class="card-little-title">原号无法接收短信？请联系服务人员人工核实办理</text>
       <text class="card-button">拨打电话</text>
     </view>
   </view>

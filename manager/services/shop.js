@@ -41,6 +41,26 @@ async function changeShopPassword(token, payload) {
   await request(`/shops/${shopId}/password`, { method: 'PUT', token, data: payload });
 }
 
+/**
+ * 换号双短信发码
+ * @param {string} token
+ * @param {{ purpose: 'shop_phone_old' | 'shop_phone_new', phone_number: string }} payload
+ */
+async function sendPhoneSmsCode(token, payload) {
+  const res = await request('/shops/phone-code/send', { method: 'POST', token, data: payload });
+  return (res && res.data) || null;
+}
+
+/**
+ * 双短信验证换绑手机号（旧码+新码都通过才生效）；服务端以 token 定位店铺，无需传店铺 id
+ * @param {{ new_phone_number: string, old_code: string, new_code: string, remark?: string }} payload
+ */
+async function changeShopPhoneBySms(token, payload) {
+  const res = await request('/shops/phone/sms-change', { method: 'PUT', token, data: payload });
+  if (!res.data || typeof res.data !== 'object') throw new Error('手机号修改失败');
+  return normalizeShop(res.data);
+}
+
 /** 注销原因 code → 页面文案（与后端枚举一一对应，改文案不动数据） */
 const CANCELLATION_REASONS = [
   { code: 'closed_shop', label: '店铺已停业或转让', desc: '不再经营，需要注销账号' },
@@ -101,6 +121,8 @@ module.exports = {
   getCurrentShopInfo,
   updateShopInfo,
   changeShopPassword,
+  sendPhoneSmsCode,
+  changeShopPhoneBySms,
   CANCELLATION_REASONS,
   submitCancellationRequest,
   getCancellationRequest,

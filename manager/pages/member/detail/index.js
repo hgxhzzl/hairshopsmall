@@ -71,11 +71,6 @@ Page({
         getConsumptionOrders(session.token, ledgerQuery).then(r => r.rows).catch(err => { console.warn('消费记录查询失败:', err); return []; })
       ]);
 
-      console.log('[会员详情] 充值记录:', recharges.length, '条, 消费记录:', consumptions.length, '条');
-      console.log('[会员详情] 当前 memberId:', memberId);
-      if (recharges.length > 0) console.log('[会员详情] 充值记录示例 memberId:', recharges[0].memberId);
-      if (consumptions.length > 0) console.log('[会员详情] 消费记录示例 memberId:', consumptions[0].memberId);
-
       // 在 JS 层预格式化日期（绕过 WXS 兼容问题）
       var dateFields = {
         registerTimeText: formatDateYMD(detail.registerTime) || '未记录',
@@ -131,7 +126,6 @@ Page({
     // 充值记录
     const memberRecharges = recharges.filter(r => r.memberId === memberId);
     const memberConsumptions = consumptions.filter(c => c.memberId === memberId);
-    console.log('[会员详情] 过滤后: 充值', memberRecharges.length, '条, 消费', memberConsumptions.length, '条');
     for (const r of memberRecharges) {
       const record = {
         id: 'recharge-' + r.id,
