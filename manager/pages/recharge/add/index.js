@@ -37,7 +37,7 @@ Page({
     try {
       const session = app.globalData.session;
       const services = await getServices(session.token);
-      const activeServices = services.filter(s => s.status !== 'inactive');
+      const activeServices = services.filter(s => s.status === 0);
       this.setData({ services: activeServices });
     } catch { /* ignore */ }
   },
@@ -145,8 +145,6 @@ Page({
     return this.data.services.find(s => s.id === id) || null;
   },
 
-  formatMoney(v) { return '¥' + (v || 0).toFixed(2); },
-
   async handleSubmit() {
     const { mode, memberId, rechargeAmount, giftAmount, serviceItems } = this.data;
 
@@ -177,6 +175,7 @@ Page({
       };
 
       await createRechargeOrder(session.token, payload);
+      app.invalidateDashboardCache();
       var that = this;
       wx.showToast({ title: '充值成功', icon: 'success', duration: 1200 });
       setTimeout(function () {

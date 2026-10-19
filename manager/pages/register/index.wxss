@@ -1,0 +1,86 @@
+/* 注册页手机号三状态控件样式 */
+
+/* 状态一：一键获取入口 */
+.phone-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16rpx;
+  margin-top: 8rpx;
+}
+
+.phone-get-btn {
+  width: 100%;
+  height: 80rpx;
+  line-height: 80rpx;
+  font-size: 30rpx;
+  color: #ffffff;
+  background: #07c160;
+  border-radius: 12rpx;
+  padding: 0;
+  margin: 0;
+}
+
+.phone-get-btn::after {
+  border: none;
+}
+
+.phone-alt-link {
+  color: #6f8197;
+  font-size: 26rpx;
+}
+
+/* 状态二：一键已验证只读 */
+.phone-verified-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12rpx;
+  margin-top: 4rpx;
+}
+
+.phone-verified-line {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.phone-verified-num {
+  font-size: 32rpx;
+  color: #1f2d3d;
+}
+
+.phone-verified-tag {
+  font-size: 24rpx;
+  color: #07c160;
+}
+
+/* 状态三：手动输入 + 短信码 */
+.phone-manual {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin-top: 8rpx;
+}
+
+.code-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.code-input {
+  flex: 1;
+}
+
+.code-send-btn {
+  flex-shrink: 0;
+  font-size: 26rpx;
+  color: #4f7cff;
+  padding: 0 8rpx;
+}
+
+.code-disabled {
+  color: #b0b8c1;
+  pointer-events: none;
+}

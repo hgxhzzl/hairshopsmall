@@ -33,7 +33,7 @@
   </view>
   </view>
   <!--<scroll-view scroll-y class="page-scroll"> -->
-  <scroll-view scroll-y class="page-scroll" style="height:calc(100vh - 290rpx);">
+  <scroll-view scroll-y class="page-scroll" style="height:calc(100vh - 290rpx);" bindscrolltolower="onScrollToLower" lower-threshold="80">
 
   <!-- 加载中 -->
   <view wx:if="{{isMemberLoading && members.length === 0}}" class="empty-state-card">
@@ -74,6 +74,13 @@
           <action-btn type="recharge" bind:tap="onRechargeForMember" data-id="{{item.id}}" />
           <action-btn type="consume" bind:tap="onConsumptionForMember" data-id="{{item.id}}" />
         </view>
+      </view>
+      <!-- 列表内底部：加载更多 / 已到底 -->
+      <view wx:if="{{isLoadingMore}}" class="empty-state-card">
+        <text class="empty-state-text">正在加载更多...</text>
+      </view>
+      <view wx:elif="{{!hasMore}}" class="empty-state-card">
+        <text class="empty-state-text">已显示全部 {{memberStats.totalCount}} 位会员</text>
       </view>
     </view>
   </block>

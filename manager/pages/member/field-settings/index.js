@@ -18,7 +18,8 @@ Page({
     actionError: ''
   },
 
-  onLoad() {
+  onShow() {
+    if (!app.checkLogin()) return;
     const visibility = getStoredMemberFieldVisibility();
     const enabledCount = Object.values(visibility).filter(Boolean).length;
     this.setData({ fieldVisibility: visibility, enabledCount });

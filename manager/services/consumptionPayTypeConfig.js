@@ -1,7 +1,6 @@
-const { request } = require('./_request');
+const { putFeatureConfig, FEATURE_CONFIG_VERSION } = require('./featureConfigClient');
 
 const FEATURE_CONFIG_STORAGE_KEY = 'feature-config.consumption.pay-type.local';
-const FEATURE_CONFIG_URL = '/shops/feature-config';
 
 const DEFAULT_VISIBILITY = { '现金': true, '账户': true, '服务': true };
 const DEFAULT_USAGE_PRICE = { '现金': 'normal_price', '账户': 'member_price', '服务': 'member_price' };
@@ -32,23 +31,33 @@ function getStoredConsumptionPayTypeSettings() {
 }
 
 async function saveConsumptionPayTypeSettings(token, settingsState) {
-  const payload = {
-    version: 1,
-    consumption: {
-      pay_type: {
-        '现金': { visible: settingsState.visibility['现金'] },
-        '账户': { visible: settingsState.visibility['账户'] },
-        '服务': { visible: settingsState.visibility['服务'] }
-      },
-      usage_price: {
-        '现金': settingsState.usagePrice['现金'],
-        '账户': settingsState.usagePrice['账户'],
-        '服务': settingsState.usagePrice['服务']
-      }
+  const consumption = {
+    pay_type: {
+      '现金': { visible: settingsState.visibility['现金'] },
+      '账户': { visible: settingsState.visibility['账户'] },
+      '服务': { visible: settingsState.visibility['服务'] }
+    },
+    usage_price: {
+      '现金': settingsState.usagePrice['现金'],
+      '账户': settingsState.usagePrice['账户'],
+      '服务': settingsState.usagePrice['服务']
     }
   };
-  await request(FEATURE_CONFIG_URL, { method: 'PUT', token, data: payload });
-  try { wx.setStorageSync(FEATURE_CONFIG_STORAGE_KEY, JSON.stringify(payload)); } catch {}
+  await putFeatureConfig(token, { consumption });
+  try { wx.setStorageSync(FEATURE_CONFIG_STORAGE_KEY, JSON.stringify({ version: FEATURE_CONFIG_VERSION, consumption })); } catch {}
 }
 
-module.exports = { getStoredConsumptionPayTypeSettings, saveConsumptionPayTypeSettings };
+/**
+ * 将服务端返回的 consumption 子树回填到本地存储。
+ * remoteConsumption 形如 { pay_type: { 现金: { visible }, ... }, usage_price: { 现金: 'normal_price', ... } }
+ */
+function applyRemoteConsumptionSettings(remoteConsumption) {
+  if (!remoteConsumption || typeof remoteConsumption !== 'object') return;
+  try {
+    wx.setStorageSync(FEATURE_CONFIG_STORAGE_KEY, JSON.stringify({ version: FEATURE_CONFIG_VERSION, consumption: remoteConsumption }));
+  } catch {
+    // 存储失败不影响核心功能
+  }
+}
+
+module.exports = { getStoredConsumptionPayTypeSettings, saveConsumptionPayTypeSettings, applyRemoteConsumptionSettings };

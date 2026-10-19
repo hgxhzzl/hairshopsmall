@@ -51,14 +51,14 @@ Page({
     return '0';
   },
   async loadServices() {
-    try { const s = await getServices(app.globalData.session.token); this.setData({ services: s.filter(x => x.status !== 'inactive') }); } catch {}
+    try { const s = await getServices(app.globalData.session.token); this.setData({ services: s.filter(x => x.status === 0) }); } catch (err) { wx.showToast({ title: err.message || '服务项目加载失败', icon: 'none' }); }
   },
   async loadMember() {
     try {
       const m = await getMemberById(app.globalData.session.token, this.data.memberId);
       this.setData({ member: m });
       await this.loadEntitlements();
-    } catch {}
+    } catch (err) { wx.showToast({ title: err.message || '会员信息加载失败', icon: 'none' }); }
   },
   async loadEntitlements() {
     try {
@@ -67,7 +67,7 @@ Page({
       if (this.data.payType === '2' && this.data.serviceItems.length === 0) {
         this.populateFromEntitlements();
       }
-    } catch {}
+    } catch (err) { this.setData({ error: err.message || '会员套餐权益加载失败' }); }
   },
   buildItemsFromEntitlements() {
     const grouped = {};
@@ -214,6 +214,7 @@ Page({
         }
       }
       await createConsumptionOrder(app.globalData.session.token, payload);
+      app.invalidateDashboardCache();
       var that = this;
       wx.showToast({ title: '消费成功', icon: 'success', duration: 1200 });
       setTimeout(function () {

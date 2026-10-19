@@ -1,26 +1,6 @@
 const { request } = require('./_request');
-
-function normalizeText(value) {
-  if (typeof value === 'string') return value.trim();
-  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
-  return '';
-}
-
-function normalizeNumber(value) {
-  if (typeof value === 'number') return value;
-  if (typeof value === 'string') { const v = Number(value); return Number.isFinite(v) ? v : 0; }
-  return 0;
-}
-
-function isDeleted(value) { return value === 1 || value === '1'; }
-
-function getMonthRange() {
-  const now = new Date();
-  return {
-    create_time_start: new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
-    create_time_end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString()
-  };
-}
+const { normalizeText, normalizeNumber, isDeleted } = require('../utils/normalize');
+const { getMonthRange } = require('../utils/date');
 
 function normalizeConsumption(item) {
   return {
@@ -60,7 +40,7 @@ function normalizeConsumptionItems(item) {
 
 /** 获取消费列表 */
 async function getConsumptionOrders(token, options = {}) {
-  const query = { ...getMonthRange(), page: 1, pageSize: 100, ...options };
+  const query = { ...getMonthRange(), page: 1, pageSize: 20, ...options };
   const res = await request('/consumption-orders', { token, query });
   const rows = Array.isArray(res.data) ? res.data : [];
   const pagination = (res.pagination && typeof res.pagination === 'object') ? res.pagination : {};

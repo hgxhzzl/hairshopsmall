@@ -1,6 +1,7 @@
 const app = getApp();
 const { generateAccountBook } = require('../../../services/member');
 const { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY } = require('../../../utils/constants');
+const { formatDateYMD } = require('../../../utils/date');
 
 const ACCOUNT_BOOK_CACHE_PREFIX = 'account-book.cache.';
 
@@ -20,27 +21,6 @@ function parseBookDateRange(bookName) {
   const match = (bookName || '').match(/account_book_(\d{4})_\d+_(\d{8})\d{6}/);
   if (!match) return null;
   return match[1] + '0101 至 ' + match[2];
-}
-
-function formatDate(value) {
-  if (!value) return '暂无数据';
-  return value;
-}
-
-/** 将后端返回的日期字符串统一格式化为 yyyy-mm-dd */
-function formatDateYMD(value) {
-  if (!value) return '';
-  var s = String(value).trim();
-  // 过滤占位符
-  if (s.indexOf('yyyy') >= 0 || s.indexOf('YYYY') >= 0) return '';
-  // 尝试匹配 yyyy[-/]mm[-/]dd 前缀
-  var m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-  if (m) {
-    return m[1] + '-' + (m[2].length === 1 ? '0' + m[2] : m[2]) + '-' + (m[3].length === 1 ? '0' + m[3] : m[3]);
-  }
-  // 兜底：直接截取前10位
-  if (s.length >= 10) return s.slice(0, 10);
-  return s;
 }
 
 /** 生成服务状态提示（仅告知服务状态，不含任何交易引导） */

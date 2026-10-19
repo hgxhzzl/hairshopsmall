@@ -1,5 +1,5 @@
 const app = getApp();
-const { updateService } = require('../../../services/service');
+const { updateService, getServices } = require('../../../services/service');
 
 const NAME_MAX = 10;
 const PRICE_MAX = 999.99;
@@ -30,23 +30,28 @@ Page({
   onLoad(options) {
     const serviceId = options.serviceId || '';
     this.setData({ serviceId });
-    // Load service from global data
-    const pendingService = app.globalData._pendingEditService;
-    if (pendingService && pendingService.id === serviceId) {
-      this.initFromService(pendingService);
-      app.globalData._pendingEditService = null;
+    if (serviceId) {
+      this.loadService(serviceId);
     }
   },
 
   onShow() {
     if (!app.checkLogin()) return;
-    if (!this.data.name) {
-      // If no data loaded, try to reload
-      const serviceId = this.data.serviceId;
-      if (serviceId && app.globalData._pendingEditService && app.globalData._pendingEditService.id === serviceId) {
-        this.initFromService(app.globalData._pendingEditService);
-        app.globalData._pendingEditService = null;
+  },
+
+  /** 根据 id 从服务端拉取服务详情（不再依赖 globalData 侧信道） */
+  async loadService(serviceId) {
+    try {
+      const session = app.globalData.session;
+      const services = await getServices(session.token);
+      const service = services.find(s => s.id === serviceId);
+      if (service) {
+        this.initFromService(service);
+      } else {
+        this.setData({ actionError: '服务项目不存在或已删除' });
       }
+    } catch (err) {
+      this.setData({ actionError: err.message || '加载服务项目失败' });
     }
   },
 

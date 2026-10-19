@@ -65,7 +65,6 @@ Page({
 
   navToEditService(e) {
     const service = e.currentTarget.dataset.service;
-    app.globalData._pendingEditService = service;
     wx.navigateTo({ url: '/pages/me/service-edit/index?serviceId=' + service.id });
   },
 

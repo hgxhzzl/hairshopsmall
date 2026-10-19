@@ -15,7 +15,30 @@
     </view>
     <view class="field-block border-top">
       <text class="field-label">手机号码</text>
-      <input class="field-info" type="number" maxlength="11" value="{{phoneNumber}}" bindinput="onPhoneInput" placeholder="请输入手机号" />
+
+      <!-- 状态一：初始，展示一键获取入口 + 其他号码兜底 -->
+      <view wx:if="{{phoneInputMode === 'init'}}" class="phone-actions">
+        <button class="phone-get-btn" open-type="getPhoneNumber" bindgetphonenumber="handleGetPhoneNumber">微信一键获取手机号</button>
+        <text class="phone-alt-link" bindtap="switchToManual">使用其他手机号 ›</text>
+      </view>
+
+      <!-- 状态二：一键已验证，只读展示 -->
+      <view wx:elif="{{phoneInputMode === 'wechat'}}" class="phone-verified-row">
+        <view class="phone-verified-line">
+          <text class="field-info phone-verified-num">{{phoneNumber}}</text>
+          <text class="phone-verified-tag">✓ 已通过微信验证</text>
+        </view>
+        <text class="phone-alt-link" bindtap="switchToManual">这不是我的号码？改一下 ›</text>
+      </view>
+
+      <!-- 状态三：手动输入 + 短信验证码兜底 -->
+      <view wx:else class="phone-manual">
+        <input class="field-info" type="number" maxlength="11" value="{{phoneNumber}}" bindinput="onPhoneInput" placeholder="请输入手机号" />
+        <view class="code-row">
+          <input class="field-info code-input" type="number" maxlength="6" value="{{smsCode}}" bindinput="onSmsCodeInput" placeholder="短信验证码" />
+          <text class="code-send-btn{{smsCooldown > 0 ? ' code-disabled' : ''}}" bindtap="handleSendSmsCode">{{smsCooldown > 0 ? smsCooldown + 's 后重发' : '获取验证码'}}</text>
+        </view>
+      </view>
     </view>
     <view class="field-block border-top">
       <text class="field-label">登录密码</text>

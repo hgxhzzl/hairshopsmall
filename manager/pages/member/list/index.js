@@ -1,15 +1,23 @@
 const app = getApp();
-const { getMembers, deleteMember } = require('../../../services/member');
+const { getMembers, getMemberSummary, deleteMember } = require('../../../services/member');
+
+const PAGE_SIZE = 20;
+// 搜索输入防抖：停止输入 300ms 后才发起服务端查询，避免每次按键都打接口
+const SEARCH_DEBOUNCE_MS = 300;
 
 Page({
   data: {
     members: [],
     memberError: '',
     isMemberLoading: false,
+    isLoadingMore: false,
     memberSearchText: '',
     filteredMembers: [],
     memberStats: { totalCount: 0, totalBalance: 0, totalPrepaid: 0 },
-    memberGenderStats: { maleCount: 0, femaleCount: 0 }
+    memberGenderStats: { maleCount: 0, femaleCount: 0 },
+    page: 1,
+    totalPages: 1,
+    hasMore: false
   },
 
   onShow() {
@@ -17,66 +25,110 @@ Page({
       this.getTabBar().init();
     }
     if (!app.checkLogin()) return;
-    this.loadMembers();
+    this.refresh();
+  },
+
+  onUnload() {
+    if (this._searchTimer) clearTimeout(this._searchTimer);
   },
 
   onPullDownRefresh() {
-    this.loadMembers().finally(() => wx.stopPullDownRefresh());
+    this.refresh().finally(() => wx.stopPullDownRefresh());
   },
 
-  async loadMembers() {
+  /** 滚动到底部加载下一页 */
+  onScrollToLower() {
+    this.loadMore();
+  },
+
+  async refresh() {
+    await Promise.all([this.loadSummary(), this.reload('')]);
+  },
+
+  async loadSummary() {
     try {
-      this.setData({ isMemberLoading: true, memberError: '' });
       const session = app.globalData.session;
-      const members = await getMembers(session.token);
-      this.setData({ members }, () => this.applySearchFilter());
+      const s = await getMemberSummary(session.token);
+      this.setData({
+        memberStats: {
+          totalCount: s.totalCount,
+          totalBalance: s.totalBalance,
+          totalPrepaid: s.totalPrepaid
+        },
+        memberGenderStats: {
+          maleCount: s.maleCount,
+          femaleCount: s.femaleCount
+        }
+      });
     } catch (err) {
-      this.setData({ memberError: err.message || '读取会员列表失败' });
-    } finally {
-      this.setData({ isMemberLoading: false });
+      // 汇总失败不阻断列表展示
     }
   },
 
-  /** 搜索输入 */
+  async fetchList(page, keyword, append) {
+    const session = app.globalData.session;
+    try {
+      if (append) {
+        this.setData({ isLoadingMore: true });
+      } else {
+        this.setData({ isMemberLoading: true, memberError: '' });
+      }
+      const { data, pagination } = await getMembers(session.token, {
+        keyword,
+        page,
+        pageSize: PAGE_SIZE
+      });
+      const members = append ? this.data.members.concat(data) : data;
+      const totalPages = Math.max(pagination.totalPages || 1, 1);
+      this.setData({
+        members,
+        filteredMembers: members,
+        page,
+        totalPages,
+        hasMore: page < totalPages,
+        isMemberLoading: false,
+        isLoadingMore: false
+      });
+    } catch (err) {
+      this.setData({
+        memberError: err.message || '读取会员列表失败',
+        isMemberLoading: false,
+        isLoadingMore: false
+      });
+    }
+  },
+
+  /** 重新从第一页加载（搜索/清除/刷新） */
+  reload(keyword) {
+    const kw = (keyword !== undefined ? keyword : this.data.memberSearchText).trim();
+    return this.fetchList(1, kw, false);
+  },
+
+  /** 追加分页 */
+  loadMore() {
+    if (!this.data.hasMore || this.data.isLoadingMore || this.data.isMemberLoading) return;
+    return this.fetchList(this.data.page + 1, this.data.memberSearchText.trim(), true);
+  },
+
+  /** 搜索输入（防抖走服务端关键字查询） */
   onSearchInput(e) {
-    this.setData({ memberSearchText: e.detail.value }, () => this.applySearchFilter());
+    const value = e.detail.value;
+    this.setData({ memberSearchText: value });
+    if (this._searchTimer) clearTimeout(this._searchTimer);
+    this._searchTimer = setTimeout(() => {
+      this._searchTimer = null;
+      this.reload(value);
+    }, SEARCH_DEBOUNCE_MS);
   },
 
   /** 清除搜索 */
   onClearSearch() {
-    this.setData({ memberSearchText: '' }, () => this.applySearchFilter());
-  },
-
-  /** 应用筛选 */
-  applySearchFilter() {
-    const { members, memberSearchText } = this.data;
-    const normalizedSearch = memberSearchText.trim().toLowerCase();
-    let filtered = members;
-    if (normalizedSearch) {
-      filtered = members.filter(m =>
-        (m.name || '').toLowerCase().includes(normalizedSearch) ||
-        (m.memberNo || '').toLowerCase().includes(normalizedSearch) ||
-        (m.phone || '').toLowerCase().includes(normalizedSearch)
-      );
+    if (this._searchTimer) {
+      clearTimeout(this._searchTimer);
+      this._searchTimer = null;
     }
-
-    const maleCount = members.filter(m => m.gender === '男').length;
-    const femaleCount = members.filter(m => m.gender === '女').length;
-
-    this.setData({
-      filteredMembers: filtered,
-      memberStats: {
-        totalCount: members.length,
-        totalBalance: members.reduce((sum, m) => sum + m.balance, 0),
-        totalPrepaid: members.reduce((sum, m) => sum + m.prepaid, 0)
-      },
-      memberGenderStats: { maleCount, femaleCount }
-    });
-  },
-
-  /** 格式化金额 */
-  formatMoney(value) {
-    return '¥' + (value || 0).toFixed(2);
+    this.setData({ memberSearchText: '' });
+    this.reload('');
   },
 
   /** 查看会员详情 */
@@ -121,8 +173,9 @@ Page({
         try {
           const session = app.globalData.session;
           await deleteMember(session.token, id);
+          app.invalidateDashboardCache();
           wx.showToast({ title: '已删除', icon: 'success' });
-          this.loadMembers();
+          await Promise.all([this.loadSummary(), this.reload()]);
         } catch (err) {
           wx.showToast({ title: err.message || '删除失败', icon: 'none' });
         }

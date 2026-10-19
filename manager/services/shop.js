@@ -1,20 +1,5 @@
 const { request } = require('./_request');
-
-function normalizeText(value) { return typeof value === 'string' ? value.trim() : ''; }
-
-function normalizeShop(record) {
-  if (!record || typeof record !== 'object') return null;
-  return {
-    id: String(record.id || '').trim(),
-    shopName: normalizeText(record.shop_name || record.shopName),
-    ownerName: normalizeText(record.owner_name || record.ownerName),
-    phoneNumber: normalizeText(record.phone_number || record.phoneNumber),
-    address: normalizeText(record.address),
-    registerTime: normalizeText(record.register_time || record.registerTime),
-    expireTime: normalizeText(record.expire_time || record.expireTime),
-    status: typeof record.status === 'number' ? record.status : (record.status !== undefined ? Number(record.status) : 0)
-  };
-}
+const { normalizeShop } = require('../utils/normalize');
 
 /** 获取店铺信息 */
 async function getCurrentShopInfo(token) {

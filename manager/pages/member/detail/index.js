@@ -3,20 +3,22 @@ const { getMemberById, getMemberBookQrText } = require('../../../services/member
 const { getRechargeOrders } = require('../../../services/recharge');
 const { getConsumptionOrders } = require('../../../services/consumption');
 const qrcode = require('../../../utils/qrcode');
+const { formatDateYMD } = require('../../../utils/date');
 
-/** 在 JS 层格式化日期（避免 WXS getRegExp 兼容问题） */
-function formatDateYMD(val) {
-  if (!val) return '';
-  var s = String(val);
-  if (/yyyy/i.test(s)) return '';
-  if (s.length < 10) return '';
-  if (s[4] !== '-' || s[7] !== '-') return '';
-  var pos = [0, 1, 2, 3, 5, 6, 8, 9];
-  for (var i = 0; i < pos.length; i++) {
-    var c = s[pos[i]];
-    if (c < '0' || c > '9') return '';
+/**
+ * 按分页把某会员的全部充值/消费流水取回，避免单页 pageSize 上限导致
+ * 活跃会员流水被静默截断、余额累计算错。用后端返回的 totalPages 驱动翻页。
+ */
+async function fetchAllOrderRows(token, baseQuery, fetcher) {
+  const pageSize = 200;
+  const first = await fetcher(token, { ...baseQuery, page: 1, pageSize });
+  let rows = (first && first.rows) || [];
+  const totalPages = Math.max(1, (first && first.pagination && first.pagination.totalPages) || 1);
+  for (let page = 2; page <= totalPages; page++) {
+    const next = await fetcher(token, { ...baseQuery, page, pageSize });
+    rows = rows.concat((next && next.rows) || []);
   }
-  return s.substring(0, 10);
+  return rows;
 }
 
 Page({
@@ -62,13 +64,13 @@ Page({
     try {
       this.setData({ isMemberDetailLoading: true, memberDetailError: '' });
 
-      // 查询该会员所有充值/消费记录（不限月份），传 member_id 过滤 + 移除当月限制
-      var ledgerQuery = { member_id: memberId, create_time_start: '', create_time_end: '', pageSize: 500 };
+      // 查询该会员所有充值/消费记录（不限月份），按 member_id 服务端过滤并分页取全量
+      var ledgerQuery = { member_id: memberId, create_time_start: '', create_time_end: '' };
       const [detail, qrText, recharges, consumptions] = await Promise.all([
         getMemberById(session.token, memberId).catch(err => { throw err; }),
         getMemberBookQrText(session.token, memberId).catch(() => ''),
-        getRechargeOrders(session.token, ledgerQuery).then(r => r.rows).catch(err => { console.warn('充值记录查询失败:', err); return []; }),
-        getConsumptionOrders(session.token, ledgerQuery).then(r => r.rows).catch(err => { console.warn('消费记录查询失败:', err); return []; })
+        fetchAllOrderRows(session.token, ledgerQuery, getRechargeOrders).catch(err => { console.warn('充值记录查询失败:', err); return []; }),
+        fetchAllOrderRows(session.token, ledgerQuery, getConsumptionOrders).catch(err => { console.warn('消费记录查询失败:', err); return []; })
       ]);
 
       // 在 JS 层预格式化日期（绕过 WXS 兼容问题）
@@ -194,19 +196,6 @@ Page({
   switchLedgerTab(e) {
     const tab = e.currentTarget.dataset.tab;
     this.setData({ activeLedgerTab: tab });
-  },
-
-  /** 格式化金额 */
-  formatMoney(value) {
-    return '¥' + (value || 0).toFixed(2);
-  },
-
-  /** 格式化日期 */
-  formatDate(value) {
-    if (!value) return '未记录';
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return value;
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   },
 
   /** 生成二维码图片（使用 qrcode-generator 官方库 + Canvas 2D） */

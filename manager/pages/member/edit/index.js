@@ -1,10 +1,16 @@
 const app = getApp();
 const { getMemberById, updateMember } = require('../../../services/member');
 const { getStoredMemberFieldVisibility } = require('../../../services/memberFieldConfig');
-
-const MEMBER_ID_MAX_LENGTH = 6;
-const MEMBER_NAME_MAX_LENGTH = 10;
-const REMARK_MAX_LENGTH = 20;
+const {
+  sanitizeName,
+  sanitizeMemberNo,
+  sanitizePhone,
+  sanitizeRemark,
+  canSubmitForm,
+  validateMemberForm,
+  buildMemberPayload,
+  memberToForm
+} = require('../../../utils/memberForm');
 
 Page({
   data: {
@@ -52,30 +58,22 @@ Page({
   },
 
   applyMemberToForm(member) {
-    this.setData({
-      memberName: (member.name || '').slice(0, MEMBER_NAME_MAX_LENGTH),
-      memberNo: (member.memberNo || '').replace(/\D/g, '').slice(0, MEMBER_ID_MAX_LENGTH),
-      phone: (member.phone || '').replace(/\D/g, '').slice(0, 11),
-      gender: member.gender === '女' ? '女' : '男',
-      birthDate: member.birthDate ? member.birthDate.slice(0, 10) : '',
-      registerDate: member.registerTime ? member.registerTime.slice(0, 10) : '',
-      remark: (member.remark || '').slice(0, REMARK_MAX_LENGTH)
-    });
+    this.setData(memberToForm(member));
   },
 
   onNameInput(e) {
-    const value = (e.detail.value || '').slice(0, MEMBER_NAME_MAX_LENGTH);
+    const value = sanitizeName(e.detail.value);
     this.setData({ memberName: value, actionError: '' });
     this.updateCanSubmit();
   },
 
   onNoInput(e) {
-    const value = (e.detail.value || '').replace(/\D/g, '').slice(0, MEMBER_ID_MAX_LENGTH);
+    const value = sanitizeMemberNo(e.detail.value);
     this.setData({ memberNo: value, actionError: '' });
   },
 
   onPhoneInput(e) {
-    const value = (e.detail.value || '').replace(/\D/g, '').slice(0, 11);
+    const value = sanitizePhone(e.detail.value);
     this.setData({ phone: value, actionError: '' });
     this.updateCanSubmit();
   },
@@ -90,7 +88,7 @@ Page({
   },
 
   onRemarkInput(e) {
-    const value = (e.detail.value || '').slice(0, REMARK_MAX_LENGTH);
+    const value = sanitizeRemark(e.detail.value);
     this.setData({ remark: value, actionError: '' });
   },
 
@@ -100,26 +98,13 @@ Page({
   },
 
   updateCanSubmit() {
-    const { memberName, phone, registerDate } = this.data;
-    const nameOk = !!memberName.trim();
-    const registerOk = !!registerDate.trim();
-    const phoneOk = !phone.trim() || /^1[3-9]\d{9}$/.test(phone);
-    this.setData({ canSubmit: nameOk && registerOk && phoneOk });
+    this.setData({ canSubmit: canSubmitForm(this.data) });
   },
 
   async handleSubmit() {
-    const { memberName, phone, memberNo, gender, birthDate, registerDate, remark, memberId } = this.data;
-
-    if (!memberName.trim()) {
-      this.setData({ actionError: '请输入会员姓名' });
-      return;
-    }
-    if (phone.trim() && !/^1[3-9]\d{9}$/.test(phone)) {
-      this.setData({ actionError: '手机号码格式不正确' });
-      return;
-    }
-    if (!registerDate.trim()) {
-      this.setData({ actionError: '请选择注册日期' });
+    const error = validateMemberForm(this.data);
+    if (error) {
+      this.setData({ actionError: error });
       return;
     }
 
@@ -127,17 +112,10 @@ Page({
       this.setData({ isSubmitting: true, actionError: '' });
       const session = app.globalData.session;
 
-      const payload = {
-        member_name: memberName.trim(),
-        member_no: memberNo.trim() || undefined,
-        phone_number: phone.trim() || undefined,
-        gender,
-        birth_date: birthDate || undefined,
-        register_time: new Date(registerDate + 'T00:00:00').toISOString(),
-        remark: remark.trim() || undefined
-      };
+      const payload = buildMemberPayload(this.data);
 
-      await updateMember(session.token, memberId, payload);
+      await updateMember(session.token, this.data.memberId, payload);
+      app.invalidateDashboardCache();
       wx.showToast({ title: '修改成功', icon: 'success' });
       setTimeout(() => wx.navigateBack(), 1500);
     } catch (error) {

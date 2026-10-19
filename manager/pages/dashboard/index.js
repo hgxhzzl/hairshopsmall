@@ -1,13 +1,15 @@
 const app = getApp();
 const { getDashboardSnapshot } = require('../../services/dashboard');
 
+// 首页快照 TTL：60s 内回到首页直接复用缓存，避免频繁重拉聚合接口
+const DASHBOARD_TTL_MS = 60 * 1000;
+
 Page({
   data: {
     dashboard: null,
     shop: null,
     dashboardError: '',
     isLoading: false,
-    refreshKey: 0,
     memberCount: 0
   },
 
@@ -24,38 +26,33 @@ Page({
   },
 
   onPullDownRefresh() {
-    this.loadDashboard().finally(() => wx.stopPullDownRefresh());
+    this.loadDashboard({ force: true }).finally(() => wx.stopPullDownRefresh());
   },
 
-  async loadDashboard() {
+  async loadDashboard(options = {}) {
+    const force = options.force === true;
+    const cache = app.globalData.dashboardCache;
+    const fresh =
+      cache &&
+      !app.globalData.dashboardDirty &&
+      Date.now() - cache.ts < DASHBOARD_TTL_MS;
+    if (!force && fresh) {
+      this.setData({ dashboard: cache.data, memberCount: cache.data.totalMembers });
+      return;
+    }
+
     try {
       this.setData({ isLoading: true, dashboardError: '' });
       const session = app.globalData.session;
       const snapshot = await getDashboardSnapshot(session.token);
+      app.globalData.dashboardCache = { data: snapshot, ts: Date.now() };
+      app.globalData.dashboardDirty = false;
       this.setData({ dashboard: snapshot, memberCount: snapshot.totalMembers });
     } catch (err) {
       this.setData({ dashboardError: err.message || '首页数据读取失败' });
     } finally {
       this.setData({ isLoading: false });
     }
-  },
-
-  /** 格式化金额 */
-  formatMoney(value) {
-    return '¥' + (value || 0).toFixed(2);
-  },
-
-  /** 格式化人数 */
-  formatCount(value) {
-    return (value || 0) + '人';
-  },
-
-  /** 格式化日期 */
-  formatDate(value) {
-    if (!value) return '未记录';
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return value;
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   },
 
   /** 跳转新增会员 */

@@ -1,18 +1,7 @@
 const app = getApp();
 const { getConsumptionOrderDetail } = require('../../../services/consumption');
 const { getMemberById } = require('../../../services/member');
-
-function formatDateStr(v) {
-  if (!v) return '';
-  var d = new Date(v);
-  if (isNaN(d.getTime())) {
-    var s = String(v);
-    return s.length >= 10 ? s.slice(0, 10) : s;
-  }
-  var M = d.getMonth() + 1;
-  var D = d.getDate();
-  return d.getFullYear() + '-' + (M < 10 ? '0' + M : M) + '-' + (D < 10 ? '0' + D : D);
-}
+const { formatDateStr } = require('../../../utils/date');
 
 Page({
   data: { detail: null, member: null, error: '', isLoading: false, id: '' },
@@ -35,6 +24,5 @@ Page({
     } catch (err) { this.setData({ error: err.message || '加载失败' }); }
     finally { this.setData({ isLoading: false }); }
   },
-  fm(v) { return '¥' + (v || 0).toFixed(2); },
   goBack() { wx.navigateBack(); }
 });

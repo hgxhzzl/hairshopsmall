@@ -1,4 +1,5 @@
 const app = getApp();
+const { request } = require('../../../services/_request');
 
 Page({
   data: {
@@ -22,31 +23,21 @@ Page({
   async downloadAndPreview() {
     try {
       const session = app.globalData.session;
-      const apiBaseUrl = app.globalData.apiBaseUrl;
-      const url = apiBaseUrl + '/members/account-book/files/' + encodeURIComponent(this.data.bookName);
-
-      const res = await new Promise((resolve, reject) => {
-        wx.request({
-          url,
-          header: { Authorization: 'Bearer ' + session.token },
-          responseType: 'arraybuffer',
-          success: (res) => {
-            if (res.statusCode === 200) resolve(res);
-            else reject(new Error(String(res.statusCode)));
-          },
-          fail: reject
-        });
-      });
+      // 统一走 _request 封装（自动带 baseURL / Authorization，并处理 401）
+      const buffer = await request(
+        '/members/account-book/files/' + encodeURIComponent(this.data.bookName),
+        { token: session.token, responseType: 'arraybuffer' }
+      );
 
       // Save temp file
       const fs = wx.getFileSystemManager();
       const tempPath = wx.env.USER_DATA_PATH + '/' + this.data.bookName;
-      fs.writeFileSync(tempPath, res.data, 'binary');
+      fs.writeFileSync(tempPath, buffer, 'binary');
 
       // Count pages from PDF buffer
       let pageCount = 0;
       try {
-        const bytes = new Uint8Array(res.data);
+        const bytes = new Uint8Array(buffer);
         const text = new TextDecoder('latin1').decode(bytes);
         const countMatch = text.match(/\/Count\s+(\d+)/);
         if (countMatch) {

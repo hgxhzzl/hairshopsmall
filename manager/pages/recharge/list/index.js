@@ -1,5 +1,6 @@
 const app = getApp();
 const { getRechargeOrders, deleteRechargeOrder } = require('../../../services/recharge');
+const { getPresetRange: getDateRange, formatDateStr } = require('../../../utils/date');
 
 const DATE_PRESETS = [
   { key: 'today', label: '今日' },
@@ -15,50 +16,6 @@ const BENEFIT_FILTERS = [
   { key: 0, label: '服务套餐' }
 ];
 
-function getDateRange(preset) {
-  const now = new Date();
-  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-  const start = new Date(end);
-
-  switch (preset) {
-    case 'today':
-      start.setHours(0, 0, 0, 0);
-      break;
-    case 'week': {
-      const day = start.getDay() || 7;
-      start.setDate(start.getDate() - day + 1);
-      start.setHours(0, 0, 0, 0);
-      break;
-    }
-    case 'month':
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
-      break;
-    case 'quarter':
-      start.setMonth(start.getMonth() - 2, 1);
-      start.setHours(0, 0, 0, 0);
-      break;
-    case 'year':
-      start.setMonth(0, 1);
-      start.setHours(0, 0, 0, 0);
-      break;
-  }
-  return { start, end };
-}
-
-function formatDateStr(v) {
-  if (!v) return '';
-  var d = new Date(v);
-  if (isNaN(d.getTime())) {
-    // 兜底：尝试截取前10位
-    var s = String(v);
-    return s.length >= 10 ? s.slice(0, 10) : s;
-  }
-  var M = d.getMonth() + 1;
-  var D = d.getDate();
-  return d.getFullYear() + '-' + (M < 10 ? '0' + M : M) + '-' + (D < 10 ? '0' + D : D);
-}
-
 Page({
   data: {
     recharges: [],
@@ -70,7 +27,7 @@ Page({
     benefitFilter: 'ALL',
     datePresets: DATE_PRESETS,
     benefitFilters: BENEFIT_FILTERS,
-    stats: { totalCount: 0, totalAmount: 0, totalGiftAmount: 0, packageCount: 0 },
+    stats: { totalCount: 0, totalAmount: 0 },
     filteredRecharges: [],
     rangeText: '',
     datePresetLabel: '本月',
@@ -173,9 +130,7 @@ Page({
     // 统计：条数和金额优先使用服务端 pagination 返回值
     var stats = {
       totalCount: (typeof _serverTotal === 'number' && _serverTotal > 0) ? _serverTotal : filtered.length,
-      totalAmount: (_serverAmountTotal != null) ? _serverAmountTotal : filtered.reduce(function(s, r) { return s + r.amount; }, 0),
-      totalGiftAmount: filtered.reduce(function(s, r) { return s + (r.giftAmount || 0); }, 0),
-      packageCount: filtered.filter(function(r) { return r.benefitType === 0; }).length
+      totalAmount: (_serverAmountTotal != null) ? _serverAmountTotal : filtered.reduce(function(s, r) { return s + r.amount; }, 0)
     };
 
     this.setData({ filteredRecharges: filtered, stats: stats, rangeText: rangeText, datePresetLabel: datePresetLabel });
@@ -194,20 +149,6 @@ Page({
     this.setData({ benefitFilter: filter }, function() { this.loadRecharges(); }.bind(this));
   },
 
-  getPresetLabel(preset) {
-    const item = DATE_PRESETS.find(p => p.key === preset);
-    return item ? item.label : preset;
-  },
-
-  formatMoney(v) { return '¥' + (v || 0).toFixed(2); },
-
-  formatDate(v) {
-    if (!v) return '';
-    const d = new Date(v);
-    if (isNaN(d.getTime())) return v;
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  },
-
   async onDeleteRecharge(e) {
     const id = e.currentTarget.dataset.id;
     const res = await new Promise(resolve => {
@@ -223,6 +164,7 @@ Page({
       this.setData({ isDeleting: true });
       const session = app.globalData.session;
       await deleteRechargeOrder(session.token, id);
+      app.invalidateDashboardCache();
       wx.showToast({ title: '已删除', icon: 'success' });
       this.loadRecharges();
     } catch (err) {

@@ -19,7 +19,7 @@ Page({
         detail, payType: String(detail.payType || 0),
         payAmount: String(detail.payAmount || detail.amount || ''),
         remark: detail.remark || '', serviceItems: items,
-        services: services.filter(s => s.status !== 'inactive')
+        services: services.filter(s => s.status === 0)
       });
       this.computePackageTotal();
 
@@ -97,6 +97,7 @@ Page({
         }
       }
       await updateConsumptionOrder(app.globalData.session.token, id, payload);
+      app.invalidateDashboardCache();
       wx.showToast({ title: '修改成功', icon: 'success' });
       setTimeout(() => wx.navigateBack(), 1500);
     } catch (err) { this.setData({ error: err.message || '修改失败' }); }

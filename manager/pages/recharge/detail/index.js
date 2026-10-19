@@ -1,18 +1,7 @@
 const app = getApp();
 const { getRechargeOrderDetail } = require('../../../services/recharge');
 const { getMemberById } = require('../../../services/member');
-
-function formatDateStr(v) {
-  if (!v) return '';
-  var d = new Date(v);
-  if (isNaN(d.getTime())) {
-    var s = String(v);
-    return s.length >= 10 ? s.slice(0, 10) : s;
-  }
-  var M = d.getMonth() + 1;
-  var D = d.getDate();
-  return d.getFullYear() + '-' + (M < 10 ? '0' + M : M) + '-' + (D < 10 ? '0' + D : D);
-}
+const { formatDateStr } = require('../../../utils/date');
 
 Page({
   data: {
@@ -77,14 +66,6 @@ Page({
     } finally {
       this.setData({ isLoading: false });
     }
-  },
-
-  formatMoney(v) { return '¥' + (v || 0).toFixed(2); },
-  formatDate(v) {
-    if (!v) return '';
-    const d = new Date(v);
-    if (isNaN(d.getTime())) return v;
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   },
 
   goBack() { wx.navigateBack(); }

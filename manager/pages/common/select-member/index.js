@@ -1,67 +1,101 @@
 const app = getApp();
 const { getMembers } = require('../../../services/member');
 
+const PAGE_SIZE = 50;
+const SEARCH_DEBOUNCE_MS = 300;
+
 Page({
   data: {
     members: [],
     memberError: '',
     isMemberLoading: false,
+    isLoadingMore: false,
     searchText: '',
     filteredMembers: [],
-    filteredStats: { totalCount: 0, totalBalance: 0, totalPrepaid: 0 }
+    filteredStats: { totalCount: 0, totalBalance: 0, totalPrepaid: 0 },
+    page: 1,
+    totalPages: 1,
+    hasMore: false
   },
 
   onShow() {
     if (!app.checkLogin()) return;
-    this.loadMembers();
+    this.reload('');
   },
 
-  async loadMembers() {
+  onUnload() {
+    if (this._searchTimer) clearTimeout(this._searchTimer);
+  },
+
+  onScrollToLower() {
+    this.loadMore();
+  },
+
+  async fetchList(page, keyword, append) {
+    const session = app.globalData.session;
     try {
-      this.setData({ isMemberLoading: true, memberError: '' });
-      const session = app.globalData.session;
-      const members = await getMembers(session.token);
-      this.setData({ members, isMemberLoading: false });
-      this.applySearchFilter();
+      if (append) {
+        this.setData({ isLoadingMore: true });
+      } else {
+        this.setData({ isMemberLoading: true, memberError: '' });
+      }
+      const { data, pagination } = await getMembers(session.token, {
+        keyword,
+        page,
+        pageSize: PAGE_SIZE
+      });
+      const members = append ? this.data.members.concat(data) : data;
+      const totalPages = Math.max(pagination.totalPages || 1, 1);
+      this.setData({
+        members,
+        filteredMembers: members,
+        page,
+        totalPages,
+        hasMore: page < totalPages,
+        filteredStats: {
+          totalCount: pagination.total || members.length,
+          totalBalance: members.reduce((s, m) => s + (m.balance || 0), 0),
+          totalPrepaid: members.reduce((s, m) => s + (m.prepaid || 0), 0)
+        },
+        isMemberLoading: false,
+        isLoadingMore: false
+      });
     } catch (err) {
-      this.setData({ memberError: err.message || '会员列表加载失败', isMemberLoading: false });
+      this.setData({
+        memberError: err.message || '会员列表加载失败',
+        isMemberLoading: false,
+        isLoadingMore: false
+      });
     }
+  },
+
+  reload(keyword) {
+    const kw = (keyword !== undefined ? keyword : this.data.searchText).trim();
+    return this.fetchList(1, kw, false);
+  },
+
+  loadMore() {
+    if (!this.data.hasMore || this.data.isLoadingMore || this.data.isMemberLoading) return;
+    return this.fetchList(this.data.page + 1, this.data.searchText.trim(), true);
   },
 
   onSearchInput(e) {
-    this.setData({ searchText: e.detail.value });
-    this.applySearchFilter();
+    const value = e.detail.value;
+    this.setData({ searchText: value });
+    if (this._searchTimer) clearTimeout(this._searchTimer);
+    this._searchTimer = setTimeout(() => {
+      this._searchTimer = null;
+      this.reload(value);
+    }, SEARCH_DEBOUNCE_MS);
   },
 
   clearSearch() {
-    this.setData({ searchText: '' });
-    this.applySearchFilter();
-  },
-
-  applySearchFilter() {
-    const { members, searchText } = this.data;
-    const normalizedSearch = searchText.trim().toLowerCase();
-    let filtered = members;
-
-    if (normalizedSearch) {
-      filtered = members.filter(m =>
-        (m.name || '').toLowerCase().includes(normalizedSearch) ||
-        (m.memberNo || '').toLowerCase().includes(normalizedSearch) ||
-        (m.phone || '').toLowerCase().includes(normalizedSearch)
-      );
+    if (this._searchTimer) {
+      clearTimeout(this._searchTimer);
+      this._searchTimer = null;
     }
-
-    const stats = {
-      totalCount: filtered.length,
-      totalBalance: filtered.reduce((s, m) => s + (m.balance || 0), 0),
-      totalPrepaid: filtered.reduce((s, m) => s + (m.prepaid || 0), 0)
-    };
-
-    this.setData({ filteredMembers: filtered, filteredStats: stats });
-  },
-
-  formatMoney(v) {
-    return '¥' + (v || 0).toFixed(2);
+    this.setData({ searchText: '' });
+    this.reload('');
   },
 
   onOpenMemberDetail(e) {
@@ -75,9 +109,12 @@ Page({
     const pages = getCurrentPages();
     const prevPage = pages[pages.length - 2];
 
-    if (prevPage) {
+    // 回调判空：上一页不存在或未实现该方法时，不能直接调用导致崩溃
+    if (prevPage && typeof prevPage.onMemberSelected === 'function') {
       prevPage.onMemberSelected(memberId, memberName);
+      wx.navigateBack();
+    } else {
+      wx.showToast({ title: '无法返回上一页', icon: 'none' });
     }
-    wx.navigateBack();
   }
 });

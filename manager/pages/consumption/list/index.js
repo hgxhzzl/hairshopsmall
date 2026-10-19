@@ -1,5 +1,6 @@
 const app = getApp();
 const { getConsumptionOrders, deleteConsumptionOrder } = require('../../../services/consumption');
+const { getPresetRange: getDateRange, formatDateStr } = require('../../../utils/date');
 
 const DATE_PRESETS = [
   { key: 'today', label: '今日' },
@@ -16,32 +17,6 @@ const TYPE_FILTERS = [
   { key: 2, label: '服务' }
 ];
 
-function getDateRange(preset) {
-  const now = new Date();
-  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-  const start = new Date(end);
-  switch (preset) {
-    case 'today': start.setHours(0, 0, 0, 0); break;
-    case 'week': { const day = start.getDay() || 7; start.setDate(start.getDate() - day + 1); start.setHours(0, 0, 0, 0); break; }
-    case 'month': start.setDate(1); start.setHours(0, 0, 0, 0); break;
-    case 'quarter': start.setMonth(start.getMonth() - 2, 1); start.setHours(0, 0, 0, 0); break;
-    case 'year': start.setMonth(0, 1); start.setHours(0, 0, 0, 0); break;
-  }
-  return { start, end };
-}
-
-function formatDateStr(v) {
-  if (!v) return '';
-  var d = new Date(v);
-  if (isNaN(d.getTime())) {
-    var s = String(v);
-    return s.length >= 10 ? s.slice(0, 10) : s;
-  }
-  var M = d.getMonth() + 1;
-  var D = d.getDate();
-  return d.getFullYear() + '-' + (M < 10 ? '0' + M : M) + '-' + (D < 10 ? '0' + D : D);
-}
-
 Page({
   data: {
     consumptions: [],
@@ -53,7 +28,7 @@ Page({
     typeFilter: 'ALL',
     datePresets: DATE_PRESETS,
     typeFilters: TYPE_FILTERS,
-    stats: { totalCount: 0, totalAmount: 0, totalPayAmount: 0 },
+    stats: { totalCount: 0, totalAmount: 0 },
     filteredConsumptions: [],
     rangeText: '',
     datePresetLabel: '本月',
@@ -153,8 +128,7 @@ Page({
     // 统计：条数和金额优先使用服务端 pagination 返回值
     var stats = {
       totalCount: (typeof _serverTotal === 'number' && _serverTotal > 0) ? _serverTotal : filtered.length,
-      totalAmount: (_serverAmountTotal != null) ? _serverAmountTotal : filtered.reduce(function(s, r) { return s + r.amount; }, 0),
-      totalPayAmount: filtered.filter(function(r) { return r.payType !== 2; }).reduce(function(s, r) { return s + (r.payAmount || r.amount); }, 0)
+      totalAmount: (_serverAmountTotal != null) ? _serverAmountTotal : filtered.reduce(function(s, r) { return s + r.amount; }, 0)
     };
     this.setData({ filteredConsumptions: filtered, stats: stats, rangeText: rangeText, datePresetLabel: datePresetLabel });
   },
@@ -178,6 +152,7 @@ Page({
     try {
       this.setData({ isDeleting: true });
       await deleteConsumptionOrder(app.globalData.session.token, id);
+      app.invalidateDashboardCache();
       wx.showToast({ title: '已删除', icon: 'success' });
       this.loadConsumptions();
     } catch (err) {

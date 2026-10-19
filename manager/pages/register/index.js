@@ -1,6 +1,8 @@
-const { registerShop, loginShop } = require('../../services/auth');
+const { registerShop, loginShop, verifyWechatPhone, sendRegisterSmsCode } = require('../../services/auth');
 
 const PHONE_REGEX = /^1[3-9]\d{9}$/;
+const CODE_REGEX = /^\d{6}$/;
+const CODE_COOLDOWN_SECONDS = 60;
 
 Page({
   data: {
@@ -13,7 +15,18 @@ Page({
     isSubmitting: false,
     errorMessage: '',
     canSubmit: false,
-    agreed: false
+    agreed: false,
+    // 手机号验证：init=展示一键/其他号入口；wechat=一键已验证只读；manual=手动输入+短信码
+    phoneInputMode: 'init',
+    verifyTicket: '',
+    smsCode: '',
+    smsCooldown: 0,
+    // phoneVerifiedBy: '' | 'wechat' | 'sms'，作为提交门禁与后端核销方式依据
+    phoneVerifiedBy: ''
+  },
+
+  onUnload() {
+    this.clearSmsTimer();
   },
 
   onShopNameInput(e) {
@@ -31,8 +44,14 @@ Page({
     this.updateCanSubmit();
   },
 
+  // 手动改手机号会让原短信码作废（后端按号校验），故清码并重置验证态
   onPhoneInput(e) {
-    this.setData({ phoneNumber: e.detail.value, errorMessage: '' });
+    this.setData({
+      phoneNumber: e.detail.value,
+      smsCode: '',
+      phoneVerifiedBy: '',
+      errorMessage: ''
+    });
     this.updateCanSubmit();
   },
 
@@ -46,10 +65,36 @@ Page({
     this.updateCanSubmit();
   },
 
+  onSmsCodeInput(e) {
+    const value = e.detail.value || '';
+    const ready = CODE_REGEX.test(value.trim()) && PHONE_REGEX.test(this.data.phoneNumber.trim());
+    this.setData({ smsCode: value, phoneVerifiedBy: ready ? 'sms' : '', errorMessage: '' });
+    this.updateCanSubmit();
+  },
+
   updateCanSubmit() {
-    const { shopName, ownerName, address, phoneNumber, password, confirmPassword, agreed } = this.data;
+    const {
+      shopName,
+      ownerName,
+      address,
+      phoneNumber,
+      password,
+      confirmPassword,
+      agreed,
+      phoneVerifiedBy
+    } = this.data;
     this.setData({
-      canSubmit: !!(shopName.trim() && ownerName.trim() && address.trim() && phoneNumber.trim() && password.trim().length >= 6 && confirmPassword.trim().length >= 6 && password.trim() === confirmPassword.trim() && agreed)
+      canSubmit: !!(
+        shopName.trim() &&
+        ownerName.trim() &&
+        address.trim() &&
+        PHONE_REGEX.test(phoneNumber.trim()) &&
+        password.trim().length >= 6 &&
+        confirmPassword.trim().length >= 6 &&
+        password.trim() === confirmPassword.trim() &&
+        agreed &&
+        phoneVerifiedBy
+      )
     });
   },
 
@@ -70,8 +115,91 @@ Page({
     wx.navigateBack();
   },
 
+  /** 一键获取手机号回调（open-type="getPhoneNumber"） */
+  async handleGetPhoneNumber(e) {
+    const detail = e.detail || {};
+
+    if (!detail.code) {
+      const denied = typeof detail.errMsg === 'string' && detail.errMsg.indexOf('deny') > -1;
+      this.setData({
+        errorMessage: denied ? '你已取消手机号授权，可改用其他手机号' : '获取手机号失败，请改用其他手机号'
+      });
+      return;
+    }
+
+    try {
+      this.setData({ errorMessage: '', isSubmitting: true });
+      const { phoneNumber, verifyTicket } = await verifyWechatPhone(detail.code);
+      this.setData({
+        phoneNumber,
+        verifyTicket,
+        phoneInputMode: 'wechat',
+        phoneVerifiedBy: 'wechat',
+        smsCode: ''
+      });
+      this.updateCanSubmit();
+    } catch (error) {
+      this.setData({ errorMessage: error.message || '手机号验证失败' });
+    } finally {
+      this.setData({ isSubmitting: false });
+    }
+  },
+
+  /** 切换到手动输入（拒绝授权 / 代注册 / 登记非微信绑定号） */
+  switchToManual() {
+    this.setData({
+      phoneInputMode: 'manual',
+      phoneVerifiedBy: '',
+      verifyTicket: '',
+      smsCode: '',
+      phoneNumber: '',
+      errorMessage: ''
+    });
+    this.updateCanSubmit();
+  },
+
+  clearSmsTimer() {
+    if (this._smsTimer) {
+      clearInterval(this._smsTimer);
+      this._smsTimer = null;
+    }
+  },
+
+  startSmsCooldown() {
+    this.setData({ smsCooldown: CODE_COOLDOWN_SECONDS });
+    this._smsTimer = setInterval(() => {
+      const next = this.data.smsCooldown - 1;
+      if (next <= 0) {
+        this.clearSmsTimer();
+        this.setData({ smsCooldown: 0 });
+        return;
+      }
+      this.setData({ smsCooldown: next });
+    }, 1000);
+  },
+
+  /** 短信兜底发码 */
+  async handleSendSmsCode() {
+    if (this.data.smsCooldown > 0) return;
+
+    const phone = this.data.phoneNumber.trim();
+    if (!PHONE_REGEX.test(phone)) {
+      this.setData({ errorMessage: '请先输入正确的 11 位手机号' });
+      return;
+    }
+
+    try {
+      this.setData({ errorMessage: '' });
+      await sendRegisterSmsCode(phone);
+      wx.showToast({ title: '验证码已发送', icon: 'none' });
+      this.startSmsCooldown();
+    } catch (error) {
+      this.setData({ errorMessage: error.message || '验证码发送失败' });
+    }
+  },
+
   async handleSubmit() {
-    const { shopName, ownerName, address, phoneNumber, password, confirmPassword } = this.data;
+    const { shopName, ownerName, address, phoneNumber, password, confirmPassword, phoneVerifiedBy } = this.data;
 
     if (!shopName.trim()) {
       this.setData({ errorMessage: '请输入贵店名称' });
@@ -87,6 +215,10 @@ Page({
     }
     if (!PHONE_REGEX.test(phoneNumber.trim())) {
       this.setData({ errorMessage: '请输入有效的手机号码' });
+      return;
+    }
+    if (!phoneVerifiedBy) {
+      this.setData({ errorMessage: '请先验证手机号' });
       return;
     }
     if (password.length < 6) {
@@ -105,13 +237,20 @@ Page({
     try {
       this.setData({ isSubmitting: true, errorMessage: '' });
 
-      await registerShop({
+      const payload = {
         shop_name: shopName,
         owner_name: ownerName,
         phone_number: phoneNumber,
         password: password,
         address: address
-      });
+      };
+      if (phoneVerifiedBy === 'wechat') {
+        payload.phone_verify_ticket = this.data.verifyTicket;
+      } else if (phoneVerifiedBy === 'sms') {
+        payload.sms_code = this.data.smsCode;
+      }
+
+      await registerShop(payload);
 
       // 注册成功后自动登录
       try {

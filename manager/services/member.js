@@ -1,18 +1,5 @@
 const { request } = require('./_request');
-
-function normalizeText(value) {
-  if (typeof value === 'string') return value.trim();
-  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
-  return '';
-}
-
-function normalizeNumber(value) {
-  if (typeof value === 'number') return value;
-  if (typeof value === 'string') { const v = Number(value); return Number.isFinite(v) ? v : 0; }
-  return 0;
-}
-
-function isDeleted(value) { return value === 1 || value === '1'; }
+const { normalizeText, normalizeNumber } = require('../utils/normalize');
 
 function normalizeMember(item) {
   return {
@@ -57,11 +44,32 @@ function normalizeEntitlement(item) {
   };
 }
 
-/** 获取会员列表 */
-async function getMembers(token) {
-  const res = await request('/members', { token, query: { page: 1, pageSize: 500 } });
+/** 获取会员列表（服务端关键字搜索 + 分页） */
+async function getMembers(token, options = {}) {
+  const page = options.page || 1;
+  const pageSize = options.pageSize || 20;
+  const res = await request('/members', {
+    token,
+    query: { page, pageSize, keyword: options.keyword || '' }
+  });
   const rows = Array.isArray(res.data) ? res.data : [];
-  return rows.filter(item => item && typeof item === 'object' && !isDeleted(item.is_deleted)).map(normalizeMember);
+  // 后端已过滤软删除会员，客户端不再重复过滤
+  const data = rows.filter(item => item && typeof item === 'object').map(normalizeMember);
+  const pagination = res.pagination || { page, pageSize, total: data.length, totalPages: 1 };
+  return { data, pagination };
+}
+
+/** 获取当前店铺会员汇总（总数/性别/余额合计，不受分页与搜索影响） */
+async function getMemberSummary(token) {
+  const res = await request('/members/summary', { token });
+  const d = res && res.data ? res.data : {};
+  return {
+    totalCount: normalizeNumber(d.total),
+    maleCount: normalizeNumber(d.maleCount),
+    femaleCount: normalizeNumber(d.femaleCount),
+    totalBalance: normalizeNumber(d.totalBalance),
+    totalPrepaid: normalizeNumber(d.totalPrepaid)
+  };
 }
 
 /** 获取会员详情 */
@@ -132,4 +140,4 @@ async function generateAccountBook(token) {
   return { message: msg, accountBook: null };
 }
 
-module.exports = { getMembers, getMemberById, createMember, updateMember, deleteMember, getMemberServiceEntitlements, getMemberBookQrText, generateAccountBook };
+module.exports = { getMembers, getMemberSummary, getMemberById, createMember, updateMember, deleteMember, getMemberServiceEntitlements, getMemberBookQrText, generateAccountBook };

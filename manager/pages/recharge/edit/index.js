@@ -42,7 +42,7 @@ Page({
       ]);
 
       const isStoredMode = detail.benefitType !== 0;
-      const activeServices = services.filter(s => s.status !== 'inactive');
+      const activeServices = services.filter(s => s.status === 0);
       const serviceItems = (detail.items || []).map(item => ({
         serviceId: item.serviceInfoId || item.id || '',
         name: item.itemName || item.name || '',
@@ -163,6 +163,7 @@ Page({
       };
 
       await updateRechargeOrder(session.token, rechargeId, payload);
+      app.invalidateDashboardCache();
       wx.showToast({ title: '修改成功', icon: 'success' });
       setTimeout(() => wx.navigateBack(), 1500);
     } catch (err) {

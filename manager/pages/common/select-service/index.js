@@ -56,10 +56,6 @@ Page({
     this.setData({ filteredServices: filtered });
   },
 
-  formatMoney(v) {
-    return '¥' + (v || 0).toFixed(2);
-  },
-
   onSelectService(e) {
     const serviceId = e.currentTarget.dataset.id;
     const serviceName = e.currentTarget.dataset.name || '';
