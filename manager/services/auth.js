@@ -128,6 +128,35 @@ async function sendRegisterSmsCode(phoneNumber) {
   return (response && response.data) || null;
 }
 
+/**
+ * 发送密码重置短信验证码
+ * @param {string} phoneNumber
+ * @returns {Promise<{ mode: string, expire_seconds: number } | null>}
+ */
+async function sendResetPasswordSmsCode(phoneNumber) {
+  const response = await request('/shops/password/reset/sms-code', {
+    method: 'POST',
+    data: { phone_number: phoneNumber.trim() }
+  });
+  return (response && response.data) || null;
+}
+
+/**
+ * 短信码重置密码
+ * @param {{ phone_number: string, sms_code: string, new_password: string }} payload
+ */
+async function resetPasswordBySms(payload) {
+  const response = await request('/shops/password/reset/sms', {
+    method: 'POST',
+    data: {
+      phone_number: payload.phone_number.trim(),
+      sms_code: payload.sms_code.trim(),
+      new_password: payload.new_password.trim()
+    }
+  });
+  return response;
+}
+
 module.exports = {
   getStoredSession,
   clearStoredSession,
@@ -136,5 +165,7 @@ module.exports = {
   loginShop,
   registerShop,
   verifyWechatPhone,
-  sendRegisterSmsCode
+  sendRegisterSmsCode,
+  sendResetPasswordSmsCode,
+  resetPasswordBySms
 };
