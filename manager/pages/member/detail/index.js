@@ -6,19 +6,52 @@ const qrcode = require('../../../utils/qrcode');
 const { formatDateYMD } = require('../../../utils/date');
 
 /**
+ * 服务端列表 pageSize 上限（HairShopApi src/utils/request.ts 的 MAX_PAGE_SIZE）。
+ * 超过上限会被后端 400 拒绝，而这里的 catch 会把它变成空数组 ——
+ * 表现就是「会员流水一条都不显示」，所以这个值必须与后端保持一致。
+ */
+const MAX_PAGE_SIZE = 100;
+
+/** 同时并发的翻页请求数。会员流水多的店一年能到十几页，串行翻页会把等待时间叠成 N 倍 RTT */
+const PAGE_CONCURRENCY = 4;
+
+/** 多久之后 onShow 认为数据陈旧、需要重拉（毫秒） */
+const STALE_AFTER_MS = 60 * 1000;
+
+/**
  * 按分页把某会员的全部充值/消费流水取回，避免单页 pageSize 上限导致
- * 活跃会员流水被静默截断、余额累计算错。用后端返回的 totalPages 驱动翻页。
+ * 活跃会员流水被静默截断、余额累计算错。用后端返回的 totalPages 驱动翻页，
+ * 除首页外按 4 页一批并发拉取（结果仍按页码顺序拼接，保持时间顺序与旧实现一致）。
  */
 async function fetchAllOrderRows(token, baseQuery, fetcher) {
-  const pageSize = 200;
+  const pageSize = MAX_PAGE_SIZE;
   const first = await fetcher(token, { ...baseQuery, page: 1, pageSize });
-  let rows = (first && first.rows) || [];
+  const rows = (first && first.rows) || [];
   const totalPages = Math.max(1, (first && first.pagination && first.pagination.totalPages) || 1);
-  for (let page = 2; page <= totalPages; page++) {
-    const next = await fetcher(token, { ...baseQuery, page, pageSize });
-    rows = rows.concat((next && next.rows) || []);
+
+  if (totalPages <= 1) {
+    return rows;
   }
-  return rows;
+
+  const restPages = [];
+  for (let page = 2; page <= totalPages; page++) {
+    restPages.push(page);
+  }
+
+  const tail = [];
+  for (let i = 0; i < restPages.length; i += PAGE_CONCURRENCY) {
+    const chunk = restPages.slice(i, i + PAGE_CONCURRENCY);
+    const chunkResults = await Promise.all(
+      chunk.map(page => fetcher(token, { ...baseQuery, page, pageSize }))
+    );
+    chunkResults.forEach(result => {
+      if (result && result.rows) {
+        tail.push(...result.rows);
+      }
+    });
+  }
+
+  return rows.concat(tail);
 }
 
 Page({
@@ -52,9 +85,19 @@ Page({
 
   onShow() {
     if (!app.checkLogin()) return;
-    if (this.data.memberId) {
-      this.loadAll();
+    if (!this.data.memberId) return;
+
+    // 旧实现每次 onShow 都全量重拉（会员 + 二维码 + 全部流水）：
+    // 从「新增消费」返回一次就是一次十几页的串行翻页。现在只在
+    // 「首次进入 / 数据已陈旧 / 别处刚改过消费充值」时才重拉。
+    const isStale = Date.now() - (this.loadedAt || 0) > STALE_AFTER_MS;
+    const hasPendingChange = !!app.globalData.dashboardDirty;
+
+    if (this.hasLoaded && !isStale && !hasPendingChange) {
+      return;
     }
+
+    this.loadAll();
   },
 
   async loadAll() {
@@ -88,6 +131,8 @@ Page({
         recharges,
         consumptions
       }, () => {
+        this.hasLoaded = true;
+        this.loadedAt = Date.now();
         this.buildLedgerRecords();
         // 二维码异步生成（对齐 RN：有手机号且有 qrText 才生成）
         var phone = (detail.phone || '').trim();

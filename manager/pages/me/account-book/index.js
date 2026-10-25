@@ -1,5 +1,6 @@
 const app = getApp();
 const { request } = require('../../../services/_request');
+const { ACCOUNT_BOOK_TIMEOUT_MS } = require('../../../services/member');
 
 Page({
   data: {
@@ -24,9 +25,10 @@ Page({
     try {
       const session = app.globalData.session;
       // 统一走 _request 封装（自动带 baseURL / Authorization，并处理 401）
+      // PDF 体积可达数 MB，默认 15s 在弱网下会误判超时，与生成接口用同一档超时
       const buffer = await request(
         '/members/account-book/files/' + encodeURIComponent(this.data.bookName),
-        { token: session.token, responseType: 'arraybuffer' }
+        { token: session.token, responseType: 'arraybuffer', timeout: ACCOUNT_BOOK_TIMEOUT_MS }
       );
 
       // Save temp file

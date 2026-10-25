@@ -128,9 +128,20 @@ async function getMemberBookQrText(token, memberId) {
   return resolveMemberBookQrText(res.data && typeof res.data === 'object' ? res.data : null);
 }
 
+/**
+ * 账本 PDF 由服务端用无头浏览器逐页渲染，会员多的店铺要几十秒。
+ * 默认 15s 必然先超时（用户看到“网络请求失败”，后端其实还在继续生成），
+ * 这里单独放宽到 120s；nginx 的 proxy_read_timeout 已对齐到 180s。
+ */
+const ACCOUNT_BOOK_TIMEOUT_MS = 120000;
+
 /** 生成账本 */
 async function generateAccountBook(token) {
-  const res = await request('/members/account-book/generate', { method: 'POST', token });
+  const res = await request('/members/account-book/generate', {
+    method: 'POST',
+    token,
+    timeout: ACCOUNT_BOOK_TIMEOUT_MS
+  });
   const msg = normalizeText(res.message) || '账本生成成功';
   const data = res.data;
   if (data && typeof data === 'object') {
@@ -140,4 +151,4 @@ async function generateAccountBook(token) {
   return { message: msg, accountBook: null };
 }
 
-module.exports = { getMembers, getMemberSummary, getMemberById, createMember, updateMember, deleteMember, getMemberServiceEntitlements, getMemberBookQrText, generateAccountBook };
+module.exports = { getMembers, getMemberSummary, getMemberById, createMember, updateMember, deleteMember, getMemberServiceEntitlements, getMemberBookQrText, generateAccountBook, ACCOUNT_BOOK_TIMEOUT_MS };
