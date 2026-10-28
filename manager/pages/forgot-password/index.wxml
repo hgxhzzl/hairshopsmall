@@ -36,13 +36,12 @@
 
   <!-- 方式二：联系服务人员（兜底） -->
   <view class="base-card">
-    <text class="card-title">联系服务人员</text>
-    <text class="describe-text" style="display:block;margin-top:8rpx;">手机号已停用或收不到验证码？可拨打客服电话人工办理。</text>
-    <view class="row-space-between" style="margin-top:16rpx;" bindtap="handleCallSupport">
-      <text class="card-little-title">{{supportPhone}}</text>
+    <text class="card-title">联系客服</text>
+    <text class="describe-text" style="display:block;margin-top:8rpx;">手机号已停用或收不到验证码？可致电服务人员人工办理，致电时请提供注册手机号与店铺名称，便于核对身份。</text>
+    <view class="row-space-between" style="margin-top:16rpx;align-items:center;" bindtap="handleCallSupport">
+      <text class="describe-text">{{supportPhone}}</text>
       <text class="card-button">拨打电话</text>
     </view>
-    <text class="describe-text" style="display:block;margin-top:12rpx;">致电时请提供注册手机号与店铺名称，便于核对身份。</text>
   </view>
 
   <view style="display:flex;justify-content:center;margin-top:16rpx;">

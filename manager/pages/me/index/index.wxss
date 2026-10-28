@@ -1,0 +1,64 @@
+/* 仅作用于「我的」页，避免污染 app.wxss 的全局 .row-space-between / .card-button */
+
+.support-card .card-title {
+  padding-bottom: 8rpx;
+}
+
+/* 行：左侧内容（沿用全局 describe-text）+ 右侧动作，垂直居中且等高 */
+.support-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  min-height: 92rpx;
+  padding: 12rpx 0;
+}
+
+.support-row + .support-row {
+  border-top: 1px solid #eef2f6;
+}
+
+.support-row-hover {
+  background: #f5f9fd;
+}
+
+.support-row-action {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 152rpx;
+  padding: 14rpx 28rpx;
+  border-radius: 99rpx;
+  background: #4e86c7;
+  color: #ffffff;
+  font-size: 26rpx;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* 注销属于危险操作，用描边弱化，避免和「拨打电话」抢注意力 */
+.support-row-action-danger {
+  background: #ffffff;
+  color: #dd6b7d;
+  border: 1px solid #efb5bf;
+}
+
+.support-agreements {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1px solid #eef2f6;
+}
+
+.support-agreements .agreement-link {
+  padding: 8rpx 4rpx;
+}
+
+.support-agreement-divider {
+  font-size: 24rpx;
+  color: #c3ced9;
+}

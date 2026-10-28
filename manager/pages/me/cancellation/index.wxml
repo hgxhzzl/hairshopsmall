@@ -68,7 +68,7 @@
       </view>
       <view class="impact-item">
         <text class="impact-dot">·</text>
-        <text class="describe-text">建议先前往「我的 - 经营账本」生成并保存对账凭证，再提交本申请。</text>
+        <text class="describe-text">建议先前往「我的 - 我的账本」生成并保存对账凭证，再提交本申请。</text>
       </view>
       <view class="impact-item">
         <text class="impact-dot">·</text>
@@ -115,8 +115,8 @@
 
   <view class="base-card">
     <text class="card-title">有疑问？</text>
-    <view class="row-space-between" style="margin-top:16rpx;" bindtap="handleCallSupport">
-      <text class="card-little-title">联系服务人员：{{supportPhone}}</text>
+    <view class="row-space-between" style="margin-top:16rpx;align-items:center;" bindtap="handleCallSupport">
+      <text class="describe-text">联系客服：{{supportPhone}}</text>
       <text class="card-button">拨打电话</text>
     </view>
   </view>

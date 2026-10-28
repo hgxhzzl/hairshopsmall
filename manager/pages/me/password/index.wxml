@@ -1,6 +1,6 @@
 <view class="base-stack">
   <view class="base-card">
-    <text class="card-title">修改密码</text>
+    <text class="card-title">修改登录密码</text>
     <view class="field-block">
       <text class="field-label">原有密码</text>
       <input class="field-info" type="password" value="{{oldPassword}}" bindinput="onOldInput" placeholder="请输入原有密码" />

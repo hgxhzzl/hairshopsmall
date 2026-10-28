@@ -1,6 +1,6 @@
 <view class="base-stack">
   <view class="base-card">
-    <text class="card-title">编辑店铺资料</text>
+    <text class="card-title">编辑店铺信息</text>
 
     <!-- 1. 店铺名称 -->
     <view class="field-block">

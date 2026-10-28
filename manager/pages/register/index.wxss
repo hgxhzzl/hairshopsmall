@@ -53,6 +53,8 @@
 .phone-verified-tag {
   font-size: 24rpx;
   color: #07c160;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* 状态三：手动输入 + 短信码 */

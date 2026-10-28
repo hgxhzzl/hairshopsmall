@@ -1,7 +1,7 @@
 <view class="base-stack">
   <view class="base-card">
-    <text class="card-title">账本预览</text>
-    <text wx:if="{{bookName}}" class="mono-text">{{bookName}}</text>
+    <text class="card-title">查看账本</text>
+    <text wx:if="{{bookName}}" class="card-little-title">{{bookName}}</text>
   </view>
 
   <view wx:if="{{isLoading}}" class="empty-state-card">

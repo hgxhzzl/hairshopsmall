@@ -1,6 +1,6 @@
 <view class="base-stack">
   <view class="base-card">
-    <text class="card-title">新增会员信息</text>
+    <text class="card-title">新增会员</text>
     <!-- 会员姓名 -->
     <view class="field-block">
       <view class="field-row">
@@ -58,7 +58,7 @@
         <text class="field-label">备注信息</text>
         <text class="field-count">{{remark.length}}/20</text>
       </view>
-      <textarea class="field-info field-textarea" maxlength="20" bindinput="onRemarkInput" placeholder="请输入备注信息" value="{{remark}}" />
+      <input class="field-info" maxlength="20" bindinput="onRemarkInput" placeholder="请输入备注信息" value="{{remark}}" />
     </view>
 
     <!-- 注册日期 -->

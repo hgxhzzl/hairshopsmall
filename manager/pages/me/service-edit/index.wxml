@@ -1,6 +1,6 @@
 <view class="base-stack">
   <view class="base-card">
-  <text class="card-title">编辑服务项目</text> 
+    <text class="card-title">编辑服务</text>
     <view class="field-block">
       <view class="field-row">
         <text class="field-label">服务名称</text>

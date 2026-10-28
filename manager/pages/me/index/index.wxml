@@ -8,39 +8,29 @@
     <view class="card-little-title">地址：{{shop.address || '地址未填写'}}</view>
     <view class="card-little-title">电话：{{shop.phoneNumber || ''}}</view>
     <view class="card-little-title">注册：{{shop.registerTime || '暂无数据'}}</view>
-
-   
+    <view class="card-little-title">服务：{{serviceText}}</view>
   </view>
-
-    <view class="base-card">
-    
-      <text class="describe-text">服务截止日期</text>
-      <text class="describe-strong" style="display:block;margin-top:4rpx;">{{shop.expireTime || '暂无数据'}}</text>
-      <text class="describe-text" style="display:block;margin-top:8rpx;">{{expireHintText}}</text>
-    
-
-     </view>
 
   <view class="base-card">
     <text class="card-title">快捷操作</text>
     <view style="display:flex;flex-direction:column;gap:16rpx;">
       <view class="row-space-between" style="gap:16rpx;">
         <view class="quick-action-card" bindtap="navToShopEdit" style="flex:1;background: #f1dbbb;">
-          <text class="quick-action-label">店铺资料</text>
+          <text class="quick-action-label">编辑店铺信息</text>
           <text class="describe-text">更新店铺基础资料</text>
         </view>
         <view class="quick-action-card" bindtap="navToPhone" style="flex:1;background: #d8ebdf;">
-          <text class="quick-action-label">手机号码</text>
+          <text class="quick-action-label">修改手机号码</text>
           <text class="describe-text">{{shop.phoneNumber || ''}}</text>
         </view>
       </view>
       <view class="row-space-between" style="gap:16rpx;">
         <view class="quick-action-card" bindtap="navToPassword" style="flex:1;background: #f5f0d9;">
-          <text class="quick-action-label">账户安全</text>
+          <text class="quick-action-label">修改登录密码</text>
           <text class="describe-text">定期更新登录密码</text>
         </view>
         <view class="quick-action-card" bindtap="navToServiceSettings" style="flex:1;background: #c8e1fc;">
-          <text class="quick-action-label">服务设置</text>
+          <text class="quick-action-label">服务项目设置</text>
           <text class="describe-text">管理服务项目与设置</text>
         </view>
       </view>
@@ -72,20 +62,19 @@
     </view>
   </view>
 
-  <view class="base-card">
+  <view class="base-card support-card">
     <text class="card-title">联系客服</text>
-    <text class="describe-text" style="display:block;margin-top:8rpx;">使用中遇到问题，可致电服务人员。</text>
-    <view class="row-space-between" style="margin-top:16rpx;" bindtap="handleCallSupport">
-      <text class="card-little-title">{{supportPhone}}</text>
-      <text class="card-button">拨打电话</text>
+    <view class="support-row" bindtap="handleCallSupport" hover-class="support-row-hover" hover-stay-time="80">
+      <text class="describe-text">{{supportPhone}}</text>
+      <text class="support-row-action">拨打电话</text>
     </view>
-    <view class="row-space-between" style="margin-top:16rpx;">
-      <text class="card-little-title">账号注销</text>
-      <text class="card-button" bindtap="handleCancelAccount">申请注销</text>
+    <view class="support-row" bindtap="handleCancelAccount" hover-class="support-row-hover" hover-stay-time="80">
+      <text class="describe-text">账号注销</text>
+      <text class="support-row-action support-row-action-danger">申请注销</text>
     </view>
-    <text class="describe-text" style="display:block;margin-top:12rpx;">注销申请可在应用内提交与撤回；受理后 3 个工作日内联系确认身份，确认后 7 个工作日内完成数据删除。</text>
-    <view style="display:flex;gap:24rpx;margin-top:20rpx;">
+    <view class="support-agreements">
       <text class="agreement-link" bindtap="navToServiceAgreement">《服务协议》</text>
+      <text class="support-agreement-divider">·</text>
       <text class="agreement-link" bindtap="navToPrivacyPolicy">《隐私政策》</text>
     </view>
   </view>

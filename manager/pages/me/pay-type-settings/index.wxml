@@ -1,6 +1,6 @@
 <view class="base-stack">
   <view class="base-card">
-    <view  class="card-title">消费业务设置</view >
+    <view  class="card-title">消费类型设置</view >
     <view  class="card-little-title">设置新增消费页展示哪些业务类型</view>
     <view  class="describe-text">已启用类型：<text class="describe-strong">{{enabledCount}}</text></view>
 

@@ -23,7 +23,7 @@ function parseBookDateRange(bookName) {
   return match[1] + '0101 至 ' + match[2];
 }
 
-/** 生成服务状态提示（仅告知服务状态，不含任何交易引导） */
+/** 生成服务状态词（正常 / 即将到期 / 已到期），拼进「服务」行展示 */
 function buildExpireHint(expireTime) {
   var formatted = formatDateYMD(expireTime);
   if (!formatted) return '';
@@ -32,9 +32,17 @@ function buildExpireHint(expireTime) {
   var today = new Date();
   today.setHours(0, 0, 0, 0);
   var diffDays = Math.ceil((expireDate.getTime() - today.getTime()) / 86400000);
-  if (diffDays < 0) return '当前服务已到期。';
-  if (diffDays <= 30) return '服务即将到期，请留意服务状态。';
-  return '服务状态正常。';
+  if (diffDays < 0) return '已到期';
+  if (diffDays <= 30) return '即将到期';
+  return '正常';
+}
+
+/** 「服务」行文案：2027-04-28 截止，目前正常；无截止日期时只留占位，避免拼出读不通的句子 */
+function buildServiceText(expireTime) {
+  const formatted = formatDateYMD(expireTime);
+  if (!formatted) return '暂无数据';
+  const hint = buildExpireHint(formatted);
+  return hint ? `${formatted} 截止，目前${hint}` : `${formatted} 截止`;
 }
 
 Page({
@@ -46,7 +54,7 @@ Page({
     isOpening: false,
     actionError: '',
     actionMessage: '',
-    expireHintText: '',
+    serviceText: '暂无数据',
     supportPhone: SUPPORT_PHONE_DISPLAY
   },
 
@@ -66,7 +74,7 @@ Page({
     }
     this.setData({
       shop,
-      expireHintText: buildExpireHint(shop.expireTime)
+      serviceText: buildServiceText(shop.expireTime)
     });
 
     this.loadAccountBook();

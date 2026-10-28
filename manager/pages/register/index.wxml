@@ -1,6 +1,6 @@
 <view class="base-stack">
   <view class="base-card">
-    <text class="card-title">用户注册信息</text>
+    <text class="card-title">用户注册</text>
     <view class="field-block">
       <text class="field-label">店铺名称</text>
       <input class="field-info" value="{{shopName}}" bindinput="onShopNameInput" placeholder="请输入贵店名称" />
