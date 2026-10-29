@@ -8,7 +8,10 @@
     <view class="card-little-title">地址：{{shop.address || '地址未填写'}}</view>
     <view class="card-little-title">电话：{{shop.phoneNumber || ''}}</view>
     <view class="card-little-title">注册：{{shop.registerTime || '暂无数据'}}</view>
-    <view class="card-little-title">服务：{{serviceText}}</view>
+    <view class="row-space-between service-row">
+      <text class="card-little-title service-text service-status--{{expireStatus}}">服务：{{serviceText}}</text>
+      <text wx:if="{{expireStatus === 'soon' || expireStatus === 'expired'}}" class="service-renew-btn" bindtap="handleRenew">联系续费</text>
+    </view>
   </view>
 
   <view class="base-card">
@@ -57,6 +60,7 @@
       <view wx:if="{{actionMessage}}" class="muted-text">{{actionMessage}}</view>
       <view class="me-ledger-actions">
         <view class="card-button" bindtap="handleViewAccountBook">查看账本</view>
+        <view class="card-button" bindtap="handleDownloadAccountBook">下载/发送账本</view>
         <view class="card-button" bindtap="handleGenerateAccountBook">{{isGenerating ? '生成中...' : '生成账本'}}</view>
       </view>
     </view>

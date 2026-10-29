@@ -62,3 +62,37 @@
   font-size: 24rpx;
   color: #c3ced9;
 }
+
+/* 服务行：到期状态用文字颜色一眼区分（正常灰 / 即将到期橙 / 已到期红） */
+.service-row {
+  min-height: auto;
+  padding: 6rpx 0;
+}
+
+.service-text {
+  color: #6b7a89;
+}
+
+.service-status--soon {
+  color: #e6960a;
+}
+
+.service-status--expired {
+  color: #dd6b7d;
+}
+
+/* 「联系续费」与「拨打电话」(support-row-action) 保持同样外观 */
+.service-renew-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 152rpx;
+  padding: 14rpx 28rpx;
+  border-radius: 99rpx;
+  background: #4e86c7;
+  color: #ffffff;
+  font-size: 26rpx;
+  line-height: 1.2;
+  white-space: nowrap;
+}

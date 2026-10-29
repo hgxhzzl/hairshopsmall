@@ -99,9 +99,11 @@ async function deleteMember(token, memberId) {
   return res;
 }
 
-/** 获取会员权益 */
-async function getMemberServiceEntitlements(token, memberId) {
-  const res = await request('/member-service-entitlements', { token, query: { member_id: memberId } });
+/** 获取会员权益（编辑消费单时传 consumptionOrderId，会额外返回该单已占用的权益，用于计算可修改上限） */
+async function getMemberServiceEntitlements(token, memberId, consumptionOrderId) {
+  const query = { member_id: memberId };
+  if (consumptionOrderId) query.consumption_order_id = consumptionOrderId;
+  const res = await request('/member-service-entitlements', { token, query });
   const rows = Array.isArray(res.data) ? res.data : [];
   return rows.filter(item => item && typeof item === 'object').map(normalizeEntitlement).filter(item => item.id && item.serviceInfoId);
 }

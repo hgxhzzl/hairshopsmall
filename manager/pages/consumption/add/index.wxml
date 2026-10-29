@@ -3,7 +3,6 @@
   <view class="base-card">
     <text class="card-title">会员信息</text>
     <view class="field-block">
-      <text class="field-label">会员信息:</text>
       <view wx:if="{{member}}" class="field-row member-info-row" bindtap="navToSelectMember">
         <text class="member-name">{{member.name || '未命名会员'}}</text>
         <text wx:if="{{member.gender}}" class="member-gender-pill {{member.gender === '女' ? 'member-gender-pill-female' : 'tone-info-soft'}}">{{member.gender}}</text>
@@ -17,28 +16,28 @@
       <text class="field-amount">{{payType === '2' ? fmt.money(member.prepaid) : fmt.money(member.balance)}}</text>
     </view>
   </view>
-  <view class="base-card">
+  <view class="base-card consumption-info-card">
     <text class="card-title">消费信息</text>
-    <view class="field-block"><text class="field-label">业务类型:</text>
+    <view class="field-row-grid"><text class="field-label">业务类型:</text>
       <view class="filter-chips-row">
         <text wx:if="{{showCash}}" class="filter-chip {{payType === '0' ? 'is-active' : ''}}" bindtap="switchPayType" data-type="0">现金</text>
         <text wx:if="{{showAccount}}" class="filter-chip {{payType === '1' ? 'is-active' : ''}}" bindtap="switchPayType" data-type="1">账户</text>
         <text wx:if="{{showService}}" class="filter-chip {{payType === '2' ? 'is-active' : ''}}" bindtap="switchPayType" data-type="2">服务</text>
       </view>
     </view>
-    <view class="field-block border-top"><text class="field-label">实际消费:</text>
+    <view class="field-row-grid border-top"><text class="field-label">实际消费:</text>
       <block wx:if="{{payType === '2'}}">
         <text class="field-amount">{{fmt.money(payAmount || packageTotal)}}</text>
       </block>
       <input wx:else class="field-info {{payAmount ? 'field-amount' : ''}}" type="digit" bindinput="onAmountInput" placeholder="请输入实际消费金额" value="{{payAmount}}" />
     </view>
-    <view class="field-block border-top"><text class="field-label">备注:</text><input class="field-info" bindinput="onRemarkInput" placeholder="请输入备注" value="{{remark}}" maxlength="100" /></view>
+    <view class="field-row-grid border-top"><text class="field-label">备注:</text><input class="field-info" bindinput="onRemarkInput" placeholder="请输入备注" value="{{remark}}" maxlength="100" /></view>
   </view>
   <view class="base-card">
     <view class="row-space-between"><text class="card-title">服务项目</text><view wx:if="{{payType !== '2'}}" class="card-button" bindtap="navToSelectService">+ 添加服务</view></view>
     <text class="describe-text">{{payType === '2' ? '已选服务' : '已选'}} {{serviceItems.length}} 项<block wx:if="{{payType === '2'}}">，共 {{totalUsageCount}} 次</block>，消费合计 <text class="list-card-amount">{{fmt.money(packageTotal)}}</text><block wx:if="{{payType === '2' && totalDiscount > 0}}">，预计优惠 <text class="list-card-amount">{{fmt.money(totalDiscount)}}</text></block></text>
     <view wx:if="{{serviceItems.length > 0}}">
-      <view class="add-service-card" wx:for="{{serviceItems}}" wx:key="serviceId" wx:for-index="idx">
+      <view class="add-service-card" wx:for="{{serviceItems}}" wx:key="key" wx:for-index="idx">
         <view class="row-space-between">
           <text class="service-item-name">{{item.name}}<block wx:if="{{!item.name}}">服务 {{idx+1}}</block></text>
           <view wx:if="{{payType === '2' && item.entitlementCount}}" class="entitlement-pill"><text class="entitlement-pill-text">权益{{item.entitlementCount}}次/使用{{item.quantity || 1}}次</text></view>

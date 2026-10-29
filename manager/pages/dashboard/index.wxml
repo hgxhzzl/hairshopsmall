@@ -1,6 +1,11 @@
 <wxs module="fmt" src="/utils/filters.wxs" />
 <view class="page-wrapper">
   <scroll-view scroll-y class="page-scroll" style="height:calc(100vh - 16rpx);padding-bottom:170rpx;">
+  <!-- 服务已到期横幅：引导联系续费（不放收款码/价目） -->
+  <view wx:if="{{expireStatus === 'expired'}}" class="expired-banner" bindtap="handleRenew">
+    <text class="expired-banner-text">服务已到期，续费后恢复使用</text>
+    <text class="expired-banner-action">联系续费 ›</text>
+  </view>
   <!-- 错误提示 -->
   <text wx:if="{{dashboardError}}" class="error-text">{{dashboardError}}</text>
 

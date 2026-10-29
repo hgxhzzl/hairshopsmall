@@ -73,19 +73,23 @@ Page({
     const grouped = {};
     (this.data.entitlements || []).forEach(e => {
       const sid = e.serviceInfoId;
-      if (!grouped[sid]) {
-        grouped[sid] = { name: e.itemName, memberPrice: e.memberPrice || 0, normalPrice: e.normalPrice || 0, count: 0, entitlementIds: [] };
+      const memberPrice = Number(e.memberPrice) || 0;
+      // 同一服务按「会员价」再分组：价格不同拆成多条分别计算，价格相同合并为一条
+      const gkey = sid + '|' + memberPrice;
+      if (!grouped[gkey]) {
+        grouped[gkey] = { serviceId: sid, name: e.itemName, memberPrice, normalPrice: e.normalPrice || 0, count: 0, entitlementIds: [] };
       }
-      grouped[sid].count++;
-      grouped[sid].entitlementIds.push(e.id);
+      grouped[gkey].count++;
+      grouped[gkey].entitlementIds.push(e.id);
     });
-    return Object.keys(grouped).map(serviceId => ({
-      serviceId,
-      name: grouped[serviceId].name,
-      memberPrice: grouped[serviceId].memberPrice,
-      normalPrice: grouped[serviceId].normalPrice,
-      entitlementCount: grouped[serviceId].count,
-      entitlementIds: grouped[serviceId].entitlementIds,
+    return Object.keys(grouped).map(gkey => ({
+      key: gkey,
+      serviceId: grouped[gkey].serviceId,
+      name: grouped[gkey].name,
+      memberPrice: grouped[gkey].memberPrice,
+      normalPrice: grouped[gkey].normalPrice,
+      entitlementCount: grouped[gkey].count,
+      entitlementIds: grouped[gkey].entitlementIds,
       quantity: '1'
     }));
   },
@@ -120,6 +124,7 @@ Page({
     }
     this.setData({
       serviceItems: [...this.data.serviceItems, {
+        key: 'svc-' + service.id,
         serviceId: service.id,
         name: service.name,
         normalPrice: service.normalPrice,

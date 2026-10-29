@@ -13,7 +13,18 @@ const {
   getPresetRange,
   formatDateStr,
   formatDateYMD,
+  getExpireStatus,
 } = require('../manager/utils/date');
+
+/** 相对今天偏移 offsetDays 天的 yyyy-mm-dd（与 getExpireStatus 同用本地零点） */
+function toDateStr(offsetDays) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + offsetDays);
+  const M = String(d.getMonth() + 1).padStart(2, '0');
+  const D = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${M}-${D}`;
+}
 
 test('getMonthRange：起止落在本月首日零点与末日 23:59:59.999', () => {
   const { create_time_start, create_time_end } = getMonthRange();
@@ -77,4 +88,23 @@ test('formatDateStr：合法日期归一为 yyyy-MM-dd，非法值兜底截断',
   assert.equal(formatDateStr('2026-03-05 12:00:00'), '2026-03-05');
   assert.equal(formatDateStr(''), '');
   assert.equal(formatDateStr('not-a-date-value'), 'not-a-date');
+});
+
+test('getExpireStatus：过去为 expired，未来 30 天内（含今天）为 soon', () => {
+  assert.equal(getExpireStatus(toDateStr(-1)), 'expired');
+  assert.equal(getExpireStatus(toDateStr(-100)), 'expired');
+  assert.equal(getExpireStatus(toDateStr(0)), 'soon');
+  assert.equal(getExpireStatus(toDateStr(30)), 'soon');
+});
+
+test('getExpireStatus：31 天及以上为 normal', () => {
+  assert.equal(getExpireStatus(toDateStr(31)), 'normal');
+  assert.equal(getExpireStatus(toDateStr(60)), 'normal');
+});
+
+test('getExpireStatus：空值与非法日期返回空串', () => {
+  assert.equal(getExpireStatus(''), '');
+  assert.equal(getExpireStatus(null), '');
+  assert.equal(getExpireStatus(undefined), '');
+  assert.equal(getExpireStatus('yyyy-mm-dd'), '');
 });

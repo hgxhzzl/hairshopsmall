@@ -10,7 +10,7 @@ function normalizeConsumption(item) {
     amount: normalizeNumber(item.total_amount),
     payAmount: normalizeNumber(item.pay_amount),
     payType: Math.min(2, Math.max(0, normalizeNumber(item.pay_type))),
-    time: normalizeText(item.updated_time || item.create_time),
+    time: normalizeText(item.create_time),
     phone: normalizeText(item.member_info?.phone_number),
     primaryItemName: Array.isArray(item.consumption_item) && item.consumption_item[0] ? normalizeText(item.consumption_item[0].item_name) : '消费项目',
     serviceCount: Array.isArray(item.consumption_item) ? item.consumption_item.reduce((s, e) => s + Math.max(1, normalizeNumber(e.quantity || 1)), 0) : 0,

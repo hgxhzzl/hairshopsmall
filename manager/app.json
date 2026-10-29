@@ -28,7 +28,6 @@
     "pages/me/service-settings/index",
     "pages/me/service-add/index",
     "pages/me/service-edit/index",
-    "pages/me/account-book/index",
     "pages/me/cancellation/index",
     "pages/me/pay-type-settings/index"
   ],

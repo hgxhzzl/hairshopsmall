@@ -25,7 +25,6 @@
     <view class="base-card">
       <text class="card-title">会员信息</text>
       <view class="field-block">
-        <text class="field-label">会员信息:</text>
         <view wx:if="{{member}}" class="field-row member-info-row">
           <text class="member-name">{{member.name || detail.memberName || '未命名会员'}}</text>
           <text wx:if="{{member.gender}}" class="member-gender-pill {{member.gender === '女' ? 'member-gender-pill-female' : 'tone-info-soft'}}">{{member.gender}}</text>
@@ -44,7 +43,7 @@
     </view>
 
     <!-- 充值信息 -->
-    <view class="base-card">
+    <view class="base-card recharge-info-card">
       <text class="card-title">充值信息</text>
       <view class="field-row-grid">
         <text class="field-label">业务类型:</text>
@@ -55,15 +54,15 @@
         <text class="field-amount">{{fmt.money(detail.amount)}}</text>
       </view>
       <view wx:else>
-        <view class="field-block border-top">
-          <text class="field-label">充值本金</text>
+        <view class="field-row-grid border-top">
+          <text class="field-label">充值本金:</text>
           <text class="field-amount">{{fmt.money(detail.amount)}}</text>
         </view>
-        <view class="field-block border-top">
+        <view class="field-row-grid border-top">
           <text class="field-label">赠送金额:</text>
           <text class="field-amount">{{fmt.money(detail.giftAmount || 0)}}</text>
         </view>
-        <view class="field-block border-top">
+        <view class="field-row-grid border-top">
           <text class="field-label">到账金额:</text>
           <text class="arrival-amount">{{fmt.money(arrivalAmount)}}</text>
         </view>

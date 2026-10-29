@@ -6,7 +6,6 @@
     <view class="base-card">
       <text class="card-title">会员信息</text>
       <view class="field-block">
-        <text class="field-label">会员信息:</text>
         <view wx:if="{{member}}" class="field-row member-info-row">
           <text class="member-name">{{member.name || detail.memberName || '未命名会员'}}</text>
           <text wx:if="{{member.gender}}" class="member-gender-pill {{member.gender === '女' ? 'member-gender-pill-female' : 'tone-info-soft'}}">{{member.gender}}</text>
@@ -24,28 +23,31 @@
       </view>
     </view>
     <!-- 消费信息 -->
-    <view class="base-card">
+    <view class="base-card consumption-info-card">
       <text class="card-title">消费信息</text>
       <view class="field-row-grid">
         <text class="field-label">业务类型:</text>
         <text class="member-name">{{payType === '0' ? '现金' : payType === '1' ? '账户' : '服务'}}</text>
       </view>
-      <view wx:if="{{payType !== '2'}}" class="field-block border-top">
+      <view wx:if="{{payType !== '2'}}" class="field-row-grid border-top">
         <text class="field-label">实付金额:</text>
         <input class="field-info {{payAmount ? 'field-amount' : ''}}" type="digit" bindinput="onAmountInput" placeholder="请输入实际消费金额" value="{{payAmount}}" />
       </view>
-      <view class="field-block border-top">
+      <view class="field-row-grid border-top">
         <text class="field-label">备注:</text>
         <input class="field-info" bindinput="onRemarkInput" placeholder="请输入备注" value="{{remark}}" maxlength="100" />
       </view>
     </view>
     <!-- 服务项目 -->
     <view class="base-card">
-      <view class="row-space-between"><text class="card-title">服务项目</text><view class="card-button" bindtap="navToSelectService">+ 添加服务</view></view>
+      <view class="row-space-between"><text class="card-title">服务项目</text><view wx:if="{{payType !== '2'}}" class="card-button" bindtap="navToSelectService">+ 添加服务</view></view>
       <text class="describe-text">{{payType === '2' ? '已选服务' : '已选'}} {{serviceItems.length}} 项，合计 <text class="list-card-amount">{{fmt.money(packageTotal)}}</text></text>
       <view wx:if="{{serviceItems.length > 0}}">
-        <view class="add-service-card" wx:for="{{serviceItems}}" wx:key="serviceId" wx:for-index="idx">
-          <text class="service-item-name">{{item.name}}<block wx:if="{{!item.name}}">服务 {{idx+1}}</block></text>
+        <view class="add-service-card" wx:for="{{serviceItems}}" wx:key="key" wx:for-index="idx">
+          <view class="row-space-between">
+            <text class="service-item-name">{{item.name}}<block wx:if="{{!item.name}}">服务 {{idx+1}}</block></text>
+            <view wx:if="{{payType === '2' && item.entitlementCount}}" class="entitlement-pill"><text class="entitlement-pill-text">权益{{item.entitlementCount}}次/使用{{item.quantity || 1}}次</text></view>
+          </view>
           <view class="field-row service-price-row">
             <text wx:if="{{item.normalPrice}}" class="describe-text">正常价 {{fmt.money(item.normalPrice)}}</text>
             <text class="describe-text">会员价 <text class="list-card-amount">{{fmt.money(item.memberPrice || 0)}}</text></text>

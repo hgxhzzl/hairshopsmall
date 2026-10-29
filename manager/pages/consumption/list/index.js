@@ -3,9 +3,9 @@ const { createOrderListPage } = require('../../../utils/order-list-page');
 
 const TYPE_FILTERS = [
   { key: 'ALL', label: '全部' },
-  { key: 0, label: '现金' },
   { key: 1, label: '账户' },
-  { key: 2, label: '服务' }
+  { key: 2, label: '服务' },
+  { key: 0, label: '现金' }
 ];
 
 /**

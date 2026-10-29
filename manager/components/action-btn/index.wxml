@@ -3,7 +3,7 @@
   wx:if="{{useAppIcon}}"
   class="action-btn-custom{{disabled ? ' action-btn-disabled' : ''}}"
   style="color:{{disabled ? '#c0c4cc' : btnColor}};border-color:{{disabled ? '#c0c4cc' : btnColor}};"
-  bindtap="onTap"
+  catchtap="onTap"
 >
   <app-icon name="{{appIconName}}" size="{{iconSize}}rpx" color="{{disabled ? '#c0c4cc' : iconColor}}" />
   <text class="action-btn-label" style="font-size:{{fontSize}}rpx;font-weight:{{fontWeight}};">{{label}}</text>
@@ -20,5 +20,5 @@
   variant="outline"
   size="extra-small"
   disabled="{{disabled}}"
-  bindtap="onTap"
+  catchtap="onTap"
 />

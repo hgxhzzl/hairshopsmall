@@ -1,7 +1,9 @@
 const app = getApp();
-const { generateAccountBook } = require('../../../services/member');
+const { generateAccountBook, ACCOUNT_BOOK_TIMEOUT_MS } = require('../../../services/member');
+const { request } = require('../../../services/_request');
 const { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY } = require('../../../utils/constants');
-const { formatDateYMD } = require('../../../utils/date');
+const { formatDateYMD, getExpireStatus } = require('../../../utils/date');
+const { showRenewDialog } = require('../../../utils/renew');
 
 const ACCOUNT_BOOK_CACHE_PREFIX = 'account-book.cache.';
 
@@ -23,18 +25,11 @@ function parseBookDateRange(bookName) {
   return match[1] + '0101 至 ' + match[2];
 }
 
-/** 生成服务状态词（正常 / 即将到期 / 已到期），拼进「服务」行展示 */
+const EXPIRE_STATUS_WORD = { expired: '已到期', soon: '即将到期', normal: '正常' };
+
+/** 生成服务状态词（正常 / 即将到期 / 已到期），拼进「服务」行展示；天数计算已收敛到 getExpireStatus */
 function buildExpireHint(expireTime) {
-  var formatted = formatDateYMD(expireTime);
-  if (!formatted) return '';
-  var expireDate = new Date(formatted + 'T00:00:00');
-  if (isNaN(expireDate.getTime())) return '';
-  var today = new Date();
-  today.setHours(0, 0, 0, 0);
-  var diffDays = Math.ceil((expireDate.getTime() - today.getTime()) / 86400000);
-  if (diffDays < 0) return '已到期';
-  if (diffDays <= 30) return '即将到期';
-  return '正常';
+  return EXPIRE_STATUS_WORD[getExpireStatus(expireTime)] || '';
 }
 
 /** 「服务」行文案：2027-04-28 截止，目前正常；无截止日期时只留占位，避免拼出读不通的句子 */
@@ -55,6 +50,7 @@ Page({
     actionError: '',
     actionMessage: '',
     serviceText: '暂无数据',
+    expireStatus: '',
     supportPhone: SUPPORT_PHONE_DISPLAY
   },
 
@@ -74,7 +70,8 @@ Page({
     }
     this.setData({
       shop,
-      serviceText: buildServiceText(shop.expireTime)
+      serviceText: buildServiceText(shop.expireTime),
+      expireStatus: getExpireStatus(shop.expireTime)
     });
 
     this.loadAccountBook();
@@ -118,10 +115,62 @@ Page({
     }
   },
 
-  handleViewAccountBook() {
+  /** 下载账本 PDF 到本地临时文件，返回 { tempPath, fileName } */
+  async downloadBookToTemp(bookName) {
+    const session = app.globalData.session;
+    // PDF 可达数 MB，弱网下默认 15s 会误判超时，与生成接口用同一档超时
+    const buffer = await request(
+      '/members/account-book/files/' + encodeURIComponent(bookName),
+      { token: session.token, responseType: 'arraybuffer', timeout: ACCOUNT_BOOK_TIMEOUT_MS }
+    );
+    const fileName = /\.pdf$/i.test(bookName) ? bookName : bookName + '.pdf';
+    const tempPath = wx.env.USER_DATA_PATH + '/' + fileName;
+    wx.getFileSystemManager().writeFileSync(tempPath, buffer, 'binary');
+    return { tempPath, fileName };
+  },
+
+  /** 查看账本：下载后直接拉起系统 PDF 预览，不再经过独立页面 */
+  async handleViewAccountBook() {
     const { accountBook, isOpening } = this.data;
     if (!accountBook || !accountBook.bookName || isOpening) return;
-    wx.navigateTo({ url: '/pages/me/account-book/index?bookName=' + encodeURIComponent(accountBook.bookName) });
+    this.setData({ isOpening: true });
+    wx.showLoading({ title: '正在打开账本...', mask: true });
+    try {
+      const { tempPath } = await this.downloadBookToTemp(accountBook.bookName);
+      wx.hideLoading();
+      wx.openDocument({
+        filePath: tempPath,
+        fileType: 'pdf',
+        fail: () => { wx.showToast({ title: '预览失败，请重试', icon: 'none' }); }
+      });
+    } catch (err) {
+      wx.hideLoading();
+      wx.showToast({ title: err.message || '账本加载失败，请稍后重试', icon: 'none' });
+    } finally {
+      this.setData({ isOpening: false });
+    }
+  },
+
+  /** 下载/发送账本：下载后通过微信把 PDF 发给好友/群/文件传输助手，便于保存、打印、转发 */
+  async handleDownloadAccountBook() {
+    const { accountBook, isOpening } = this.data;
+    if (!accountBook || !accountBook.bookName || isOpening) return;
+    this.setData({ isOpening: true });
+    wx.showLoading({ title: '正在准备账本...', mask: true });
+    try {
+      const { tempPath, fileName } = await this.downloadBookToTemp(accountBook.bookName);
+      wx.hideLoading();
+      wx.shareFileMessage({
+        filePath: tempPath,
+        fileName,
+        fail: () => { wx.showToast({ title: '发送已取消或失败', icon: 'none' }); }
+      });
+    } catch (err) {
+      wx.hideLoading();
+      wx.showToast({ title: err.message || '账本加载失败，请稍后重试', icon: 'none' });
+    } finally {
+      this.setData({ isOpening: false });
+    }
   },
 
   navToShopEdit() { wx.navigateTo({ url: '/pages/me/shop-info/index' }); },
@@ -137,6 +186,11 @@ Page({
       phoneNumber: SUPPORT_PHONE,
       fail: () => {}
     });
+  },
+
+  /** 联系续费：弹出客服电话引导（不放收款码/价目） */
+  handleRenew() {
+    showRenewDialog();
   },
 
   /** 账号注销：应用内提交申请，运维回拨核实身份后再执行数据删除 */

@@ -1,0 +1,4 @@
+/* 消费信息卡片：内容行标题与内容同行后的行间距，与详情页保持一致 */
+.consumption-info-card .field-row-grid {
+  padding: 20rpx 0;
+}

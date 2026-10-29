@@ -2,3 +2,8 @@
 .page-scroll{height:100vh;padding:16rpx;padding-bottom:200rpx}
 .base-card{margin-bottom:16rpx}
 .metric-grid{margin-top:0}
+
+/* 服务已到期顶部横幅：红色描底引导联系续费 */
+.expired-banner{display:flex;align-items:center;justify-content:space-between;gap:16rpx;margin-bottom:16rpx;padding:20rpx 24rpx;border-radius:16rpx;background:#fdecee;border:1px solid #f3c2ca;}
+.expired-banner-text{color:#c14a5b;font-size:28rpx;line-height:1.4;}
+.expired-banner-action{flex-shrink:0;color:#ffffff;font-size:24rpx;padding:8rpx 22rpx;border-radius:99rpx;background:#dd6b7d;white-space:nowrap;}

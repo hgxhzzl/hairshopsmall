@@ -1,5 +1,7 @@
 const app = getApp();
 const { getDashboardSnapshot } = require('../../services/dashboard');
+const { getExpireStatus } = require('../../utils/date');
+const { showRenewDialog } = require('../../utils/renew');
 
 // 首页快照 TTL：60s 内回到首页直接复用缓存，避免频繁重拉聚合接口
 const DASHBOARD_TTL_MS = 60 * 1000;
@@ -8,6 +10,7 @@ Page({
   data: {
     dashboard: null,
     shop: null,
+    expireStatus: '',
     dashboardError: '',
     isLoading: false,
     memberCount: 0
@@ -20,7 +23,8 @@ Page({
     if (!app.checkLogin()) return;
 
     const session = app.globalData.session;
-    this.setData({ shop: session.shop || {} });
+    const shop = session.shop || {};
+    this.setData({ shop, expireStatus: getExpireStatus(shop.expireTime) });
 
     this.loadDashboard();
   },
@@ -68,5 +72,10 @@ Page({
   /** 跳转新增消费 */
   navToAddConsumption() {
     wx.navigateTo({ url: '/pages/consumption/add/index' });
+  },
+
+  /** 联系续费：弹出客服电话引导（不放收款码/价目） */
+  handleRenew() {
+    showRenewDialog();
   }
 });

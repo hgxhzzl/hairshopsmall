@@ -78,9 +78,27 @@ function formatDateYMD(value) {
   return s;
 }
 
+/**
+ * 店铺服务到期状态：'expired'（已到期）/ 'soon'（30 天内到期）/ 'normal'（正常）/ ''（无法判定）。
+ * 入参兼容原始时间串与已格式化的 yyyy-mm-dd；me 页与首页横幅共用，避免各写一份天数计算。
+ */
+function getExpireStatus(expireTime) {
+  var formatted = formatDateYMD(expireTime);
+  if (!formatted) return '';
+  var expireDate = new Date(formatted + 'T00:00:00');
+  if (isNaN(expireDate.getTime())) return '';
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  var diffDays = Math.ceil((expireDate.getTime() - today.getTime()) / 86400000);
+  if (diffDays < 0) return 'expired';
+  if (diffDays <= 30) return 'soon';
+  return 'normal';
+}
+
 module.exports = {
   getMonthRange,
   getPresetRange,
   formatDateStr,
-  formatDateYMD
+  formatDateYMD,
+  getExpireStatus
 };

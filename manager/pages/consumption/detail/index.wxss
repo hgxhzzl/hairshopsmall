@@ -1,0 +1,4 @@
+/* 消费信息卡片：加宽行间距，避免各行紧贴 */
+.consumption-info-card .field-row-grid {
+  padding: 20rpx 0;
+}

@@ -1,0 +1,4 @@
+/* 充值信息卡片：加宽行间距，与消费详情页保持一致 */
+.recharge-info-card .field-row-grid {
+  padding: 20rpx 0;
+}

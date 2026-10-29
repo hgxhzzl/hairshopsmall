@@ -7,7 +7,6 @@
     <view class="base-card">
       <text class="card-title">会员信息</text>
       <view class="field-block">
-        <text class="field-label">会员信息:</text>
         <view wx:if="{{member}}" class="field-row member-info-row">
           <text class="member-name">{{member.name || detail.memberName || '未命名会员'}}</text>
           <text wx:if="{{member.gender}}" class="member-gender-pill {{member.gender === '女' ? 'member-gender-pill-female' : 'tone-info-soft'}}">{{member.gender}}</text>
@@ -25,7 +24,7 @@
       </view>
     </view>
     <!-- 消费信息 -->
-    <view class="base-card">
+    <view class="base-card consumption-info-card">
       <text class="card-title">消费信息</text>
       <view class="field-row-grid">
         <text class="field-label">业务类型:</text>

@@ -11,7 +11,7 @@ function normalizeRecharge(item) {
     giftAmount: normalizeNumber(item.gift_amount),
     benefitType: normalizeNumber(item.benefit_type) === 0 ? 0 : 1,
     payMethod: normalizeText(item.pay_method),
-    time: normalizeText(item.updated_time || item.created_time),
+    time: normalizeText(item.created_time),
     phone: normalizeText(item.member_info?.phone_number),
     serviceItemCount: normalizeNumber(item._count?.recharge_order_item),
     entitlementCount: normalizeNumber(item._count?.member_service_entitlement),
