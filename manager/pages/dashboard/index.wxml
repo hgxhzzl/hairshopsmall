@@ -1,11 +1,6 @@
 <wxs module="fmt" src="/utils/filters.wxs" />
 <view class="page-wrapper">
   <scroll-view scroll-y class="page-scroll" style="height:calc(100vh - 16rpx);padding-bottom:170rpx;">
-  <!-- 服务已到期横幅：引导联系续费（不放收款码/价目） -->
-  <view wx:if="{{expireStatus === 'expired'}}" class="expired-banner" bindtap="handleRenew">
-    <text class="expired-banner-text">服务已到期，续费后恢复使用</text>
-    <text class="expired-banner-action">联系续费 ›</text>
-  </view>
   <!-- 错误提示 -->
   <text wx:if="{{dashboardError}}" class="error-text">{{dashboardError}}</text>
 
@@ -18,7 +13,10 @@
   <block wx:if="{{dashboard}}">
     <!-- 店铺信息卡片 -->
     <view class="base-card">
-      <view class="card-title">{{shop.shopName || '未命名店铺'}}</view>
+      <view class="shop-title-row">
+        <text class="card-title">{{shop.shopName || '未命名店铺'}}</text>
+        <text class="renew-link {{expireStatus === 'expired' ? 'renew-expired' : (expireStatus === 'soon' ? 'renew-soon' : 'renew-normal')}}" bindtap="handleRenew">联系续费</text>
+      </view>
       <view class="card-little-title">店主：{{shop.ownerName || '未填写'}}</view>
       <view class="card-little-title">地址：{{shop.address || '未填写'}}</view>
       <view class="overview-pill-row">

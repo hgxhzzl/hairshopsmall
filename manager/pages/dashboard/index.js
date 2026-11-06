@@ -2,6 +2,7 @@ const app = getApp();
 const { getDashboardSnapshot } = require('../../services/dashboard');
 const { getExpireStatus } = require('../../utils/date');
 const { showRenewDialog } = require('../../utils/renew');
+const { refreshExpireTime } = require('../../services/shop');
 
 // 首页快照 TTL：60s 内回到首页直接复用缓存，避免频繁重拉聚合接口
 const DASHBOARD_TTL_MS = 60 * 1000;
@@ -27,6 +28,19 @@ Page({
     this.setData({ shop, expireStatus: getExpireStatus(shop.expireTime) });
 
     this.loadDashboard();
+    this.refreshExpireStatus();
+  },
+
+  /** 打开首页时向后端核对最新到期日：续费后运维改了库，无需重登即可让入口状态恢复 */
+  async refreshExpireStatus() {
+    const expireTime = await refreshExpireTime(app.globalData.session.token);
+    if (!expireTime) return;
+    const shop = (app.globalData.session && app.globalData.session.shop) || {};
+    this.setData({ shop, expireStatus: getExpireStatus(expireTime) });
+    // 拉到最新到期日后同步刷新底部导航（到期则置灰会员/充值/消费）
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().init();
+    }
   },
 
   onPullDownRefresh() {

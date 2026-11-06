@@ -4,6 +4,7 @@ const { request } = require('../../../services/_request');
 const { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY } = require('../../../utils/constants');
 const { formatDateYMD, getExpireStatus } = require('../../../utils/date');
 const { showRenewDialog } = require('../../../utils/renew');
+const { refreshExpireTime } = require('../../../services/shop');
 
 const ACCOUNT_BOOK_CACHE_PREFIX = 'account-book.cache.';
 
@@ -75,6 +76,27 @@ Page({
     });
 
     this.loadAccountBook();
+    this.refreshExpireStatus();
+  },
+
+  /** 打开「我的」页时向后端核对最新到期日：续费后运维改了库，无需重登即可刷新服务行与入口状态 */
+  async refreshExpireStatus() {
+    const expireTime = await refreshExpireTime(app.globalData.session.token);
+    if (!expireTime) return;
+    const shop = { ...(app.globalData.session.shop || {}) };
+    if (shop.registerTime) {
+      shop.registerTime = formatDateYMD(shop.registerTime);
+    }
+    shop.expireTime = formatDateYMD(expireTime);
+    this.setData({
+      shop,
+      serviceText: buildServiceText(expireTime),
+      expireStatus: getExpireStatus(expireTime)
+    });
+    // 拉到最新到期日后同步刷新底部导航（到期则置灰会员/充值/消费）
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().init();
+    }
   },
 
   async loadAccountBook() {

@@ -75,7 +75,11 @@ function request(pathname, options = {}) {
           }
           reject(new Error('登录已过期，请重新登录'));
         } else {
-          reject(new Error(getErrorMessage(payload, '请求失败，请稍后重试')));
+          // 服务到期（403 + SHOP_EXPIRED）不再透传后端「服务已到期…」文案：到期后唯一动作
+          // 是底部导航禁用会员/充值/消费，正常流程下这些表单已进不来；此处只中断提交、不携到期文案。
+          const isShopExpired = res.statusCode === 403 && payload && payload.code === 'SHOP_EXPIRED';
+          const message = isShopExpired ? '' : getErrorMessage(payload, '请求失败，请稍后重试');
+          reject(new Error(message));
         }
       },
       fail(err) {

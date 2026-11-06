@@ -13,3 +13,6 @@
 }
 .tab-bar-text { font-size: 24rpx; color: #666666; margin-top: 4px; line-height: 1; }
 .tab-bar-text-active { color: #245c98; font-weight: 600; }
+/* 服务到期后会员/充值/消费入口的禁用态：置灰 + 半透，仍可点击触发轻提示 */
+.tab-bar-item-disabled { opacity: 0.5; }
+.tab-bar-text-disabled { color: #b8bfc6; }

@@ -71,6 +71,14 @@ Page({
     accountRecords: [],
     prepaidTotals: { recharge: 0, consume: 0 },
     accountTotals: { recharge: 0, consume: 0 },
+    // 本年账户充值合计（benefitType 非套餐、且充值年份为当前自然年）
+    yearAccountRechargeTotal: 0,
+    // 本年套餐充值合计（benefitType 为套餐、且充值年份为当前自然年）
+    yearPrepaidRechargeTotal: 0,
+    // 本年账户消费合计（payType 为账户、且消费年份为当前自然年）
+    yearAccountConsumeTotal: 0,
+    // 本年套餐消费合计（payType 为套餐、且消费年份为当前自然年）
+    yearPrepaidConsumeTotal: 0,
     activeLedgerTab: 'account'
   },
 
@@ -169,6 +177,12 @@ Page({
     const account = [];
     let prepaidRecharge = 0, prepaidConsume = 0;
     let accountRecharge = 0, accountConsume = 0;
+    // 账户/套餐子卡片只统计本年（按自然年）的对应类金额
+    const currentYear = new Date().getFullYear();
+    let yearAccountRecharge = 0;
+    let yearPrepaidRecharge = 0;
+    let yearAccountConsume = 0;
+    let yearPrepaidConsume = 0;
 
     // 充值记录
     const memberRecharges = recharges.filter(r => r.memberId === memberId);
@@ -186,9 +200,13 @@ Page({
       if (r.benefitType === 0) {
         prepaid.push(record);
         prepaidRecharge += r.amount;
+        const rechargeYear = new Date(r.time).getFullYear();
+        if (rechargeYear === currentYear) yearPrepaidRecharge += r.amount;
       } else {
         account.push(record);
         accountRecharge += r.amount;
+        const rechargeYear = new Date(r.time).getFullYear();
+        if (rechargeYear === currentYear) yearAccountRecharge += r.amount;
       }
     }
 
@@ -207,9 +225,13 @@ Page({
       if (c.payType === 2) {
         prepaid.push(record);
         prepaidConsume += c.amount;
+        const consumeYear = new Date(c.time).getFullYear();
+        if (consumeYear === currentYear) yearPrepaidConsume += c.amount;
       } else {
         account.push(record);
         accountConsume += c.amount;
+        const consumeYear = new Date(c.time).getFullYear();
+        if (consumeYear === currentYear) yearAccountConsume += c.amount;
       }
     }
 
@@ -233,7 +255,11 @@ Page({
       prepaidRecords: prepaidWithBalance,
       accountRecords: accountWithBalance,
       prepaidTotals: { recharge: prepaidRecharge, consume: prepaidConsume },
-      accountTotals: { recharge: accountRecharge, consume: accountConsume }
+      accountTotals: { recharge: accountRecharge, consume: accountConsume },
+      yearAccountRechargeTotal: yearAccountRecharge,
+      yearPrepaidRechargeTotal: yearPrepaidRecharge,
+      yearAccountConsumeTotal: yearAccountConsume,
+      yearPrepaidConsumeTotal: yearPrepaidConsume
     });
   },
 

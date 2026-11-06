@@ -67,6 +67,22 @@ App({
     this.globalData.servicesDirty = true;
   },
 
+  /**
+   * 就地更新缓存会话里的到期日并持久化。
+   * 用于「打开首页/我的页」时向后端核对最新 expire_time：运维后台续费改库后，
+   * 店主无需重新登录即可看到到期状态恢复。只替换 expireTime，不触碰首页/服务缓存。
+   */
+  updateSessionExpireTime(expireTime) {
+    const session = this.globalData.session;
+    if (!session || !session.shop || !expireTime) return;
+    session.shop = { ...session.shop, expireTime };
+    try {
+      wx.setStorageSync(AUTH_STORAGE_KEY, JSON.stringify(session));
+    } catch {
+      // 持久化失败不影响本次会话内存值，下次 onShow 会再同步
+    }
+  },
+
   /** 检查登录态，未登录则跳转登录页 */
   checkLogin() {
     if (!this.globalData.session) {

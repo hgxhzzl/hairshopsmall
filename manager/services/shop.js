@@ -8,6 +8,37 @@ async function getCurrentShopInfo(token) {
   return normalizeShop(res.data);
 }
 
+// 「打开首页/我的页时刷新到期日」：不做时间节流，只靠同一在途请求去重，
+// 避免并发重入时重复打 /shops/info；店主切页（onShow）即实时核对后端最新到期日。
+let expireRefreshPromise = null;
+
+/**
+ * 从服务端拉取最新到期日并回写本地会话缓存，供「打开首页/我的页」时无需重登即可刷新到期状态。
+ * 不做时间节流（保证“打开即刷新”），仅用同一在途请求去重防并发；
+ * 网络异常静默兜底，页面沿用缓存到期日、不打扰店主。
+ * @param {string} token
+ * @returns {Promise<string|null>} 最新 expire_time（原始时间串）；失败时返回 null
+ */
+function refreshExpireTime(token) {
+  if (expireRefreshPromise) return expireRefreshPromise;
+  expireRefreshPromise = (async () => {
+    try {
+      const shop = await getCurrentShopInfo(token);
+      const expireTime = shop ? shop.expireTime : '';
+      const app = getApp();
+      if (expireTime && app && app.updateSessionExpireTime) {
+        app.updateSessionExpireTime(expireTime);
+      }
+      return expireTime || null;
+    } catch {
+      return null;
+    } finally {
+      expireRefreshPromise = null;
+    }
+  })();
+  return expireRefreshPromise;
+}
+
 /** 更新店铺信息 */
 async function updateShopInfo(token, payload) {
   const app = getApp();
@@ -104,6 +135,7 @@ async function withdrawCancellationRequest(token, payload) {
 
 module.exports = {
   getCurrentShopInfo,
+  refreshExpireTime,
   updateShopInfo,
   changeShopPassword,
   sendPhoneSmsCode,

@@ -1,8 +1,9 @@
 <view class="page-wrapper" style="position:relative;">
   <scroll-view scroll-y class="page-scroll" style="height:calc(100vh - 16rpx);padding-bottom:280rpx;">
   <view class="base-card">
-    <view class="row-space-between">
+    <view class="shop-title-row">
       <text class="card-title" style="padding-bottom:0;">{{shop.shopName || '未命名店铺'}}</text>
+      <text class="renew-link {{expireStatus === 'expired' ? 'renew-expired' : (expireStatus === 'soon' ? 'renew-soon' : 'renew-normal')}}" bindtap="handleRenew">联系续费</text>
     </view>
     <view class="card-little-title">店主：{{shop.ownerName || '未填写'}}</view>
     <view class="card-little-title">地址：{{shop.address || '地址未填写'}}</view>
@@ -10,7 +11,6 @@
     <view class="card-little-title">注册：{{shop.registerTime || '暂无数据'}}</view>
     <view class="row-space-between service-row">
       <text class="card-little-title service-text service-status--{{expireStatus}}">服务：{{serviceText}}</text>
-      <text wx:if="{{expireStatus === 'soon' || expireStatus === 'expired'}}" class="service-renew-btn" bindtap="handleRenew">联系续费</text>
     </view>
   </view>
 

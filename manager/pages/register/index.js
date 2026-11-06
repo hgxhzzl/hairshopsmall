@@ -7,8 +7,6 @@ const CODE_COOLDOWN_SECONDS = 60;
 Page({
   data: {
     shopName: '',
-    ownerName: '',
-    address: '',
     phoneNumber: '',
     password: '',
     confirmPassword: '',
@@ -31,16 +29,6 @@ Page({
 
   onShopNameInput(e) {
     this.setData({ shopName: e.detail.value, errorMessage: '' });
-    this.updateCanSubmit();
-  },
-
-  onOwnerNameInput(e) {
-    this.setData({ ownerName: e.detail.value, errorMessage: '' });
-    this.updateCanSubmit();
-  },
-
-  onAddressInput(e) {
-    this.setData({ address: e.detail.value, errorMessage: '' });
     this.updateCanSubmit();
   },
 
@@ -75,8 +63,6 @@ Page({
   updateCanSubmit() {
     const {
       shopName,
-      ownerName,
-      address,
       phoneNumber,
       password,
       confirmPassword,
@@ -86,8 +72,6 @@ Page({
     this.setData({
       canSubmit: !!(
         shopName.trim() &&
-        ownerName.trim() &&
-        address.trim() &&
         PHONE_REGEX.test(phoneNumber.trim()) &&
         password.trim().length >= 6 &&
         confirmPassword.trim().length >= 6 &&
@@ -199,18 +183,10 @@ Page({
   },
 
   async handleSubmit() {
-    const { shopName, ownerName, address, phoneNumber, password, confirmPassword, phoneVerifiedBy } = this.data;
+    const { shopName, phoneNumber, password, confirmPassword, phoneVerifiedBy } = this.data;
 
     if (!shopName.trim()) {
       this.setData({ errorMessage: '请输入贵店名称' });
-      return;
-    }
-    if (!ownerName.trim()) {
-      this.setData({ errorMessage: '请输入店主姓名' });
-      return;
-    }
-    if (!address.trim()) {
-      this.setData({ errorMessage: '请输入贵店地址' });
       return;
     }
     if (!PHONE_REGEX.test(phoneNumber.trim())) {
@@ -237,12 +213,12 @@ Page({
     try {
       this.setData({ isSubmitting: true, errorMessage: '' });
 
+      // 店主姓名与店铺地址不在注册时收集，降低首轮填表摩擦，
+      // 由店主后续在「我的 - 编辑店铺信息」自行补全。
       const payload = {
         shop_name: shopName,
-        owner_name: ownerName,
         phone_number: phoneNumber,
-        password: password,
-        address: address
+        password: password
       };
       if (phoneVerifiedBy === 'wechat') {
         payload.phone_verify_ticket = this.data.verifyTicket;

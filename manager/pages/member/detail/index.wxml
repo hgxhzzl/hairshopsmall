@@ -76,22 +76,20 @@
           <text class="metric-value">{{fmt.money(memberDetail.prepaid)}}</text>
         </view>
         <view class="metric-card">
-          <text class="metric-label">累计充值</text>
-          <text class="metric-value">{{fmt.money(memberDetail.totalRechargeAmount)}}</text>
+          <text class="metric-label">累计账户充值</text>
+          <text class="metric-value">{{fmt.money(yearAccountRechargeTotal)}}</text>
         </view>
         <view class="metric-card">
-          <text class="metric-label">累计消费</text>
-          <text class="metric-value">{{fmt.money(memberDetail.totalConsumptionAmount)}}</text>
+          <text class="metric-label">累计套餐充值</text>
+          <text class="metric-value">{{fmt.money(yearPrepaidRechargeTotal)}}</text>
         </view>
         <view class="metric-card">
-          <text class="metric-label">最近充值</text>
-          <text class="metric-value">{{memberDetail.lastRechargeAmount > 0 ? fmt.money(memberDetail.lastRechargeAmount) : '暂无'}}</text>
-          <text class="metric-label">{{memberDetail.lastRechargeTimeText || '无记录'}}</text>
+          <text class="metric-label">累计账户消费</text>
+          <text class="metric-value">{{fmt.money(yearAccountConsumeTotal)}}</text>
         </view>
         <view class="metric-card">
-          <text class="metric-label">最近消费</text>
-          <text class="metric-value">{{memberDetail.lastConsumptionAmount > 0 ? fmt.money(memberDetail.lastConsumptionAmount) : '暂无'}}</text>
-          <text class="metric-label">{{memberDetail.lastConsumptionTimeText || '无记录'}}</text>
+          <text class="metric-label">累计套餐消费</text>
+          <text class="metric-value">{{fmt.money(yearPrepaidConsumeTotal)}}</text>
         </view>
       </view>
     </view>

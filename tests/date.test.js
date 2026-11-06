@@ -14,6 +14,7 @@ const {
   formatDateStr,
   formatDateYMD,
   getExpireStatus,
+  getExpireDaysLeft,
 } = require('../manager/utils/date');
 
 /** 相对今天偏移 offsetDays 天的 yyyy-mm-dd（与 getExpireStatus 同用本地零点） */
@@ -90,16 +91,29 @@ test('formatDateStr：合法日期归一为 yyyy-MM-dd，非法值兜底截断',
   assert.equal(formatDateStr('not-a-date-value'), 'not-a-date');
 });
 
-test('getExpireStatus：过去为 expired，未来 30 天内（含今天）为 soon', () => {
+test('getExpireStatus：过去为 expired，未来 7 天内（含今天）为 soon', () => {
   assert.equal(getExpireStatus(toDateStr(-1)), 'expired');
   assert.equal(getExpireStatus(toDateStr(-100)), 'expired');
   assert.equal(getExpireStatus(toDateStr(0)), 'soon');
-  assert.equal(getExpireStatus(toDateStr(30)), 'soon');
+  assert.equal(getExpireStatus(toDateStr(7)), 'soon');
 });
 
-test('getExpireStatus：31 天及以上为 normal', () => {
-  assert.equal(getExpireStatus(toDateStr(31)), 'normal');
+test('getExpireStatus：8 天及以上为 normal（试用共 30 天，阈值不能再拉到 30）', () => {
+  assert.equal(getExpireStatus(toDateStr(8)), 'normal');
+  assert.equal(getExpireStatus(toDateStr(30)), 'normal');
   assert.equal(getExpireStatus(toDateStr(60)), 'normal');
+});
+
+test('getExpireDaysLeft：到期当天为 0，已过期为负数', () => {
+  assert.equal(getExpireDaysLeft(toDateStr(0)), 0);
+  assert.equal(getExpireDaysLeft(toDateStr(3)), 3);
+  assert.equal(getExpireDaysLeft(toDateStr(-1)), -1);
+});
+
+test('getExpireDaysLeft：空值与非法日期返回 null', () => {
+  assert.equal(getExpireDaysLeft(''), null);
+  assert.equal(getExpireDaysLeft(null), null);
+  assert.equal(getExpireDaysLeft(undefined), null);
 });
 
 test('getExpireStatus：空值与非法日期返回空串', () => {

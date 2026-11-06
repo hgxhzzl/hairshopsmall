@@ -63,6 +63,52 @@ button, input, textarea, picker, navigator, form {
   color: #4f5359;
 }
 
+/* ===== 店名行 + 续费入口（首页 / 我的页共用） ===== */
+.shop-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.shop-title-row .card-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.renew-link {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 152rpx;
+  padding: 14rpx 28rpx;
+  border-radius: 99rpx;
+  font-size: 26rpx;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* 常态弱化，临近到期转橙、已到期转红（沿用原横幅配色） */
+.renew-normal {
+  color: #a9781f;
+  background: #fdf4e3;
+  border: 1px solid #f0d9ac;
+}
+
+.renew-soon {
+  color: #ffffff;
+  background: #d9a44a;
+}
+
+.renew-expired {
+  color: #ffffff;
+  background: #dd6b7d;
+}
+
 /* ===== 指标卡片 ===== */
 .metric-grid {
   display: flex;

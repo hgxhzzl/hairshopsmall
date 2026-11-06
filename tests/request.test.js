@@ -6,7 +6,9 @@
  *   1. query 里 undefined / 空串必须丢弃（避免后端把 "" 当成筛选条件）；
  *   2. 默认超时 15s，但账本下载这类大响应可以单独放宽（曾因为默认 15s
  *      必然先超时，用户看到「网络请求失败」而后端还在生成 PDF）；
- *   3. 401 要清会话并跳登录，且并发 401 只能跳一次。
+ *   3. 401 要清会话并跳登录，且并发 401 只能跳一次；
+ *   4. 403 + SHOP_EXPIRED（服务到期拦写入）不弹续费引导、也不透传到期文案：
+ *      到期引导统一由首页横幅 + 底部导航禁用承担，这里只中断提交。
  *
  * 这里用 global.getApp / global.wx 打桩，不依赖微信运行时。
  */
@@ -20,7 +22,7 @@ const REQUEST_MODULE = '../manager/services/_request';
  * isRedirectingToLogin 状态）。
  */
 function loadRequest({ apiBaseUrl = 'https://api.test/api', session = null, onRequest } = {}) {
-  const calls = { requests: [], redirects: [], cleared: 0 };
+  const calls = { requests: [], redirects: [], cleared: 0, renewDialogs: 0 };
 
   global.getApp = () => ({
     globalData: { apiBaseUrl, session },
@@ -36,6 +38,12 @@ function loadRequest({ apiBaseUrl = 'https://api.test/api', session = null, onRe
     },
     redirectTo(options) {
       calls.redirects.push(options);
+    },
+    showModal(options) {
+      calls.renewDialogs += 1;
+      if (options && typeof options.success === 'function') {
+        options.success({ confirm: false, cancel: true });
+      }
     },
   };
 
@@ -149,4 +157,37 @@ test('401 清会话并跳登录，并发 401 只跳一次', async () => {
     assert.equal(result.status, 'rejected');
     assert.match(result.reason.message, /登录已过期/);
   });
+});
+
+test('403 SHOP_EXPIRED 不弹续费引导、不透传到期文案，只中断提交', async () => {
+  const { request, calls } = loadRequest({
+    onRequest: (options) =>
+      options.success({
+        statusCode: 403,
+        data: { code: 'SHOP_EXPIRED', message: '服务已到期，续费后恢复使用' }
+      }),
+  });
+
+  const results = await Promise.allSettled([
+    request('/members', { method: 'POST' }),
+    request('/consumption-orders', { method: 'POST' })
+  ]);
+
+  // 引导交给首页横幅/导航禁用，这里不弹 modal
+  assert.equal(calls.renewDialogs, 0);
+  results.forEach((result) => {
+    assert.equal(result.status, 'rejected');
+    // 到期文案不透传：页面拿到空文案后走自己的兜底
+    assert.equal(result.reason.message, '');
+  });
+});
+
+test('403 但非到期错误时照常透传后端文案', async () => {
+  const { request, calls } = loadRequest({
+    onRequest: (options) =>
+      options.success({ statusCode: 403, data: { message: '无权访问，仅运维人员可操作' } }),
+  });
+
+  await assert.rejects(() => request('/members', { method: 'POST' }), /无权访问/);
+  assert.equal(calls.renewDialogs, 0);
 });

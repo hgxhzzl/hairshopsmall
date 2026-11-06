@@ -70,16 +70,25 @@ async function loginShop(payload) {
 
 /**
  * 店铺注册
- * @param {{ shop_name: string, owner_name: string, phone_number: string, password: string, address: string, phone_verify_ticket?: string, sms_code?: string }} payload
+ * @param {{ shop_name: string, phone_number: string, password: string, owner_name?: string, address?: string, phone_verify_ticket?: string, sms_code?: string }} payload
  */
 async function registerShop(payload) {
   const data = {
     shop_name: payload.shop_name.trim(),
-    owner_name: payload.owner_name.trim(),
     phone_number: payload.phone_number.trim(),
-    password: payload.password.trim(),
-    address: payload.address.trim()
+    password: payload.password.trim()
   };
+
+  // 店主姓名与店铺地址注册时可不填，后续在「我的 - 编辑店铺信息」补全；
+  // 为空时整个键不提交，避免后端写入空字符串而非 NULL。
+  const ownerName = normalizeText(payload.owner_name);
+  if (ownerName) {
+    data.owner_name = ownerName;
+  }
+  const address = normalizeText(payload.address);
+  if (address) {
+    data.address = address;
+  }
 
   // 手机号验证凭证：一键路径带 ticket，短信兜底路径带 code，二选一
   if (payload.phone_verify_ticket) {

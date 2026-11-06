@@ -79,20 +79,35 @@ function formatDateYMD(value) {
 }
 
 /**
- * 店铺服务到期状态：'expired'（已到期）/ 'soon'（30 天内到期）/ 'normal'（正常）/ ''（无法判定）。
+ * 店铺服务到期状态：'expired'（已到期）/ 'soon'（7 天内到期）/ 'normal'（正常）/ ''（无法判定）。
+ * 阈值取 7 天而不是 30 天：试用只有 30 天，30 天阈值会让店主从注册那天起
+ * 就挂着橙色“即将到期”，提醒成了常态噪音；7 天够打续费电话、走线下转账，又保住“临近”的含义。
+ * 与后端 isShopServiceExpired 保持一致：到期当天仍算可用（diffDays === 0 走 soon）。
  * 入参兼容原始时间串与已格式化的 yyyy-mm-dd；me 页与首页横幅共用，避免各写一份天数计算。
  */
 function getExpireStatus(expireTime) {
+  // 天数算法只留 getExpireDaysLeft 一份，避免横幅上的天数与状态词各算一套、互相对不上
+  var diffDays = getExpireDaysLeft(expireTime);
+  if (diffDays === null) return '';
+  if (diffDays < 0) return 'expired';
+  if (diffDays <= 7) return 'soon';
+  return 'normal';
+}
+
+/**
+ * 距到期还剩几个自然日：到期当天为 0，已过期为负数，无法判定时返回 null。
+ * 首页“即将到期”横幅要报具体天数（“还差 3 天”比“快到期了”更能推动打电话），
+ * 与 getExpireStatus 共用同一套天数算法，避免两处算出不一样的结果。
+ */
+function getExpireDaysLeft(expireTime) {
   var formatted = formatDateYMD(expireTime);
-  if (!formatted) return '';
+  if (!formatted) return null;
   var expireDate = new Date(formatted + 'T00:00:00');
-  if (isNaN(expireDate.getTime())) return '';
+  if (isNaN(expireDate.getTime())) return null;
   var today = new Date();
   today.setHours(0, 0, 0, 0);
-  var diffDays = Math.ceil((expireDate.getTime() - today.getTime()) / 86400000);
-  if (diffDays < 0) return 'expired';
-  if (diffDays <= 30) return 'soon';
-  return 'normal';
+
+  return Math.ceil((expireDate.getTime() - today.getTime()) / 86400000);
 }
 
 module.exports = {
@@ -100,5 +115,6 @@ module.exports = {
   getPresetRange,
   formatDateStr,
   formatDateYMD,
-  getExpireStatus
+  getExpireStatus,
+  getExpireDaysLeft
 };

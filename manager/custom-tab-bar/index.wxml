@@ -2,7 +2,7 @@
   <view
     wx:for="{{list}}"
     wx:key="pagePath"
-    class="tab-bar-item {{selected === index ? 'tab-bar-item-active' : ''}}"
+    class="tab-bar-item {{selected === index ? 'tab-bar-item-active' : ''}} {{item.disabled ? 'tab-bar-item-disabled' : ''}}"
     bindtap="switchTab"
     data-index="{{index}}"
   >
@@ -10,9 +10,9 @@
       <app-icon
         name="{{item.icon}}"
         size="{{selected === index ? '56rpx' : '52rpx'}}"
-        color="{{selected === index ? '#245c98' : '#999999'}}"
+        color="{{item.disabled ? '#cccccc' : (selected === index ? '#245c98' : '#999999')}}"
       />
     </view>
-    <text class="tab-bar-text {{selected === index ? 'tab-bar-text-active' : ''}}">{{item.text}}</text>
+    <text class="tab-bar-text {{selected === index ? 'tab-bar-text-active' : ''}} {{item.disabled ? 'tab-bar-text-disabled' : ''}}">{{item.text}}</text>
   </view>
 </view>
