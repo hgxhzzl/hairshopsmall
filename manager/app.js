@@ -3,7 +3,9 @@ const AUTH_STORAGE_KEY = 'hairshop-manager-auth';
 App({
   globalData: {
     session: null,
+    // 本地联调：模拟器可用 http://localhost:3000/api；真机用电脑 WLAN IP（与手机同 Wi‑Fi）；提审/发版前改回生产域名
     apiBaseUrl: 'https://api.hairshop.shunshunlu.cn/api',
+    // apiBaseUrl: 'http://192.168.3.143:3100/api',
     // 首页快照缓存：{ data, ts }，配合 dashboardDirty 实现 onShow TTL 复用
     dashboardCache: null,
     dashboardDirty: false,

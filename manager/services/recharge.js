@@ -15,7 +15,15 @@ function normalizeRecharge(item) {
     phone: normalizeText(item.member_info?.phone_number),
     serviceItemCount: normalizeNumber(item._count?.recharge_order_item),
     entitlementCount: normalizeNumber(item._count?.member_service_entitlement),
-    entitlementUsedCount: normalizeNumber(item._count?.usecount)
+    entitlementUsedCount: normalizeNumber(item._count?.usecount),
+    // 保留逐条套餐明细（项目名/会员单价/次数），供会员详情套餐流水展示每条明细
+    items: (Array.isArray(item.recharge_order_item) ? item.recharge_order_item : [])
+      .filter(e => e && typeof e === 'object')
+      .map(e => ({
+        name: normalizeText(e.item_name) || '服务项目',
+        price: normalizeNumber(e.member_price),
+        count: Math.max(1, normalizeNumber(e.quantity || 1))
+      }))
   };
 }
 

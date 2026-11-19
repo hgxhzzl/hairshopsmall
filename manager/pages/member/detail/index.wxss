@@ -1,0 +1,164 @@
+/* 会员详情页 - 套餐金额子卡片 */
+/* 金额行默认行高(约1.4)会撑出约7rpx下留白，压成1后行距才真正等于 margin-top */
+.prepaid-metric-card .metric-value {
+  line-height: 1;
+}
+
+/* 账户/套餐流水记录明细行 */
+/* 日期行默认行高撑出下留白，压成1后与明细行的间距才真正等于 margin-top */
+.ledger-card-meta {
+  line-height: 1;
+}
+
+.ledger-card-detail {
+  margin-top: 2rpx;
+  line-height: 1;
+}
+
+/* 套餐流水：卡片内各行上方统一 6rpx（含第一行→第二行、明细行之间）
+   上一行都已 line-height:1，所以 6rpx 就是真实可见间距 */
+/* 第一行(标题+本笔金额)默认行高≈1.4 会撑出下留白，压成1后与第二行的间距才等于 6rpx */
+.prepaid-ledger-card .ledger-card-top {
+  line-height: 1;
+}
+
+.prepaid-ledger-card .ledger-card-meta {
+  margin-top: 6rpx;
+}
+
+.prepaid-ledger-card .ledger-card-detail {
+  margin-top: 6rpx;
+}
+
+.prepaid-ledger-card .ledger-detail-line + .ledger-detail-line {
+  margin-top: 6rpx;
+}
+
+.ledger-detail-line {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  line-height: 1;
+}
+
+.ledger-detail-text {
+  font-size: 22rpx;
+  color: #64748b;
+}
+
+/* 套餐流水明细行：项目名占满剩余宽度，过长时省略，不截掉后面的次数/剩余 */
+.ledger-detail-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 24rpx;
+  color: #64748b;
+}
+
+/* 套餐流水明细行中部「±x」变动次数：常规字重，比结存弱一档，让“还剩”成为次数里的主角 */
+.ledger-detail-count {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  font-size: 24rpx;
+  font-weight: normal;
+  color: #245c98;
+}
+
+/* 变动次数的数字：与剩余次数同款固定宽度、右对齐，保证左右对齐 */
+.count-num {
+  display: inline-block;
+  width: 1.2em;
+  text-align: right;
+}
+
+/* 套餐流水明细行右侧「剩余 x次」 */
+.ledger-detail-remain {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #245c98;
+}
+
+/* 剩余次数的数字：固定宽度（够放两位），数字右对齐；
+   这样每行「剩余」左边缘、「次」右边缘都能对齐 */
+.remain-num {
+  display: inline-block;
+  width: 1.2em;
+  text-align: right;
+}
+
+/* 套餐流水第一行本笔金额：次要，淡灰 */
+.prepaid-amount-weak {
+  font-size: 22rpx;
+  color: #aeb6c2;
+}
+
+/* 套餐流水第二行「套餐余额」：主要，用更深的石板灰与本笔金额拉开主次 */
+.prepaid-balance-weak {
+  font-size: 22rpx;
+  color: #64748b;
+}
+
+/* 套餐流水第二行日期：保证可读性用 #8d98a8（仅本页套餐卡片作用域，不影响账户流水） */
+.prepaid-ledger-card .ledger-card-date {
+  color: #8d98a8;
+}
+
+/* ===== 账户流水：本笔金额与账户余额同样重要，两者同为 26rpx/加粗/#64748b ===== */
+/* 本笔金额：与「账户余额」同样重要，样式完全一致（26rpx / 加粗 / #64748b） */
+.account-amount-weak {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* 账户余额：主要，加大加粗，确保是账户流水里最显眼的数字 */
+.account-balance-strong {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* 卡片内各行上方统一 6rpx（与套餐流水一致） */
+/* 第一行默认行高会撑出下留白，压成1后与第二行的间距才等于 6rpx */
+.account-ledger-card .ledger-card-top {
+  line-height: 1;
+}
+
+.account-ledger-card .ledger-card-meta {
+  margin-top: 6rpx;
+}
+
+.account-ledger-card .ledger-card-detail {
+  margin-top: 6rpx;
+}
+
+/* 账户消费逐条明细行右侧的单价金额：常规字重、字号不超余额，不与余额抢焦点 */
+.account-detail-price {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  font-size: 22rpx;
+  font-weight: normal;
+  color: #64748b;
+}
+
+/* 账户消费明细合计提示行（明细合计与实付不一致时展示） */
+.account-ledger-card .ledger-detail-total {
+  padding-top: 6rpx;
+  border-top: 1rpx dashed #dbe4ee;
+}
+
+.account-ledger-card .ledger-detail-total .ledger-detail-name,
+.account-ledger-card .ledger-detail-total .account-detail-price {
+  font-weight: 600;
+  color: #475569;
+}
+
+/* 多条账户消费明细行之间统一 6rpx */
+.account-ledger-card .ledger-detail-line + .ledger-detail-line {
+  margin-top: 6rpx;
+}

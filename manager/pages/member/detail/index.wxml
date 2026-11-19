@@ -71,7 +71,7 @@
           <text class="metric-label">账户金额</text>
           <text class="metric-value">{{fmt.money(memberDetail.balance)}}</text>
         </view>
-        <view class="metric-card">
+        <view class="metric-card prepaid-metric-card">
           <text class="metric-label">套餐金额</text>
           <text class="metric-value">{{fmt.money(memberDetail.prepaid)}}</text>
         </view>
@@ -110,7 +110,7 @@
           </view>
         </view>
         <!-- 初值 -->
-        <view class="ledger-card" style="margin-bottom:12rpx;">
+        <view class="ledger-card account-ledger-card" style="margin-bottom:12rpx;">
           <view class="ledger-card-top">
             <text class="ledger-card-title">账户初值</text>
             <text class="ledger-card-amount amount-positive">+{{fmt.money(memberDetail.beginningBalance || 0)}}</text>
@@ -125,14 +125,41 @@
           </view>
         </block>
         <view wx:else>
-          <view class="ledger-card" wx:for="{{accountRecords}}" wx:key="id" style="margin-bottom:12rpx;">
+          <view class="ledger-card account-ledger-card" wx:for="{{accountRecords}}" wx:key="id" style="margin-bottom:12rpx;">
             <view class="ledger-card-top">
               <text class="ledger-card-title">{{item.label}}</text>
-              <text class="ledger-card-amount {{item.isNegative ? 'amount-negative' : 'amount-positive'}}">{{item.amountText}}</text>
+              <text class="account-amount-weak">{{item.amountText}}</text>
             </view>
             <view class="ledger-card-meta">
               <text class="ledger-card-date">{{item.dateText}}</text>
-              <text class="ledger-card-date">账户余额 {{item.runningBalance >= 0 ? '+' : '-'}}{{fmt.money(fmt.abs(item.runningBalance))}}</text>
+              <text class="account-balance-strong">账户余额 {{item.runningBalance >= 0 ? '+' : '-'}}{{fmt.money(fmt.abs(item.runningBalance))}}</text>
+            </view>
+            <view class="ledger-card-detail">
+              <block wx:if="{{item.kind === 'consumption'}}">
+                <block wx:if="{{item.items && item.items.length}}">
+                  <view class="ledger-detail-line" wx:for="{{item.items}}" wx:for-item="ent" wx:key="name">
+                    <text class="ledger-detail-name">{{ent.name}}</text>
+                    <text class="account-detail-price">{{ent.count > 1 ? ent.count + '×' : ''}}{{fmt.money(ent.price)}}</text>
+                  </view>
+                  <view wx:if="{{item.showTotalHint}}" class="ledger-detail-line ledger-detail-total">
+                    <text class="ledger-detail-name">明细合计</text>
+                    <text class="account-detail-price">{{item.totalHintText}}</text>
+                  </view>
+                </block>
+                <block wx:else>
+                  <text class="ledger-detail-text">{{item.primaryItemName}} · {{item.serviceCount}}项 · 实付 {{fmt.money(item.payAmount)}}</text>
+                </block>
+              </block>
+              <block wx:else>
+                <view class="ledger-detail-line">
+                  <text class="ledger-detail-name">本金</text>
+                  <text class="account-detail-price">{{fmt.money(item.amount)}}</text>
+                </view>
+                <view class="ledger-detail-line">
+                  <text class="ledger-detail-name">赠送</text>
+                  <text class="account-detail-price">{{fmt.money(item.giftAmount)}}</text>
+                </view>
+              </block>
             </view>
           </view>
         </view>
@@ -147,7 +174,7 @@
           </view>
         </view>
         <!-- 初值 -->
-        <view class="ledger-card" style="margin-bottom:12rpx;">
+        <view class="ledger-card prepaid-ledger-card" style="margin-bottom:12rpx;">
           <view class="ledger-card-top">
             <text class="ledger-card-title">套餐初值</text>
             <text class="ledger-card-amount amount-positive">+{{fmt.money(memberDetail.beginningPrepaid || 0)}}</text>
@@ -162,14 +189,21 @@
           </view>
         </block>
         <view wx:else>
-          <view class="ledger-card" wx:for="{{prepaidRecords}}" wx:key="id" style="margin-bottom:12rpx;">
+          <view class="ledger-card prepaid-ledger-card" wx:for="{{prepaidRecords}}" wx:key="id" style="margin-bottom:12rpx;">
             <view class="ledger-card-top">
               <text class="ledger-card-title">{{item.label}}</text>
-              <text class="ledger-card-amount {{item.isNegative ? 'amount-negative' : 'amount-positive'}}">{{item.amountText}}</text>
+              <text class="prepaid-amount-weak">{{item.amountText}}</text>
             </view>
             <view class="ledger-card-meta">
               <text class="ledger-card-date">{{item.dateText}}</text>
-              <text class="ledger-card-date">套餐余额 {{item.runningBalance >= 0 ? '+' : '-'}}{{fmt.money(fmt.abs(item.runningBalance))}}</text>
+              <text class="prepaid-balance-weak">套餐余额 {{item.runningBalance >= 0 ? '+' : '-'}}{{fmt.money(fmt.abs(item.runningBalance))}}</text>
+            </view>
+            <view class="ledger-card-detail">
+              <view class="ledger-detail-line" wx:for="{{item.items}}" wx:for-item="ent" wx:key="name">
+                <text class="ledger-detail-name">{{ent.name}}</text>
+                <text class="ledger-detail-count">{{item.kind === 'consumption' ? '-' : '+'}}<text class="count-num">{{ent.count}}</text></text>
+                <text class="ledger-detail-remain">结存 <text class="remain-num">{{ent.remain}}</text>次</text>
+              </view>
             </view>
           </view>
         </view>

@@ -14,7 +14,16 @@ function normalizeConsumption(item) {
     phone: normalizeText(item.member_info?.phone_number),
     primaryItemName: Array.isArray(item.consumption_item) && item.consumption_item[0] ? normalizeText(item.consumption_item[0].item_name) : '消费项目',
     serviceCount: Array.isArray(item.consumption_item) ? item.consumption_item.reduce((s, e) => s + Math.max(1, normalizeNumber(e.quantity || 1)), 0) : 0,
-    remark: normalizeText(item.remark)
+    remark: normalizeText(item.remark),
+    // 保留逐条消费明细（项目名/实收单价/次数），供会员详情套餐流水展示每条明细；
+    // 列表接口不返回 quantity，套餐消费每条权益即一行，计 1 次
+    items: (Array.isArray(item.consumption_item) ? item.consumption_item : [])
+      .filter(e => e && typeof e === 'object')
+      .map(e => ({
+        name: normalizeText(e.item_name) || '消费项目',
+        price: normalizeNumber(e.price),
+        count: 1
+      }))
   };
 }
 

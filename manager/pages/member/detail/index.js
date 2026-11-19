@@ -1,5 +1,5 @@
 const app = getApp();
-const { getMemberById, getMemberBookQrText } = require('../../../services/member');
+const { getMemberById, getMemberBookQrText, getMemberServiceEntitlements } = require('../../../services/member');
 const { getRechargeOrders } = require('../../../services/recharge');
 const { getConsumptionOrders } = require('../../../services/consumption');
 const qrcode = require('../../../utils/qrcode');
@@ -54,6 +54,17 @@ async function fetchAllOrderRows(token, baseQuery, fetcher) {
   return rows.concat(tail);
 }
 
+/** 将逐条明细按「项目名 + 单价」归集并累加次数，供套餐流水每条明细展示 */
+function groupEntitlementItems(items) {
+  const map = {};
+  (items || []).forEach(it => {
+    const key = it.name + '|' + it.price;
+    if (!map[key]) map[key] = { name: it.name, price: it.price, count: 0 };
+    map[key].count += (it.count || 1);
+  });
+  return Object.keys(map).map(k => map[k]);
+}
+
 Page({
   data: {
     memberId: '',
@@ -79,6 +90,8 @@ Page({
     yearAccountConsumeTotal: 0,
     // 本年套餐消费合计（payType 为套餐、且消费年份为当前自然年）
     yearPrepaidConsumeTotal: 0,
+    // 套餐金额子卡片：当前会员各项目剩余可用权益次数 [{ name, count }]
+    entitlementSummary: [],
     activeLedgerTab: 'account'
   },
 
@@ -117,12 +130,22 @@ Page({
 
       // 查询该会员所有充值/消费记录（不限月份），按 member_id 服务端过滤并分页取全量
       var ledgerQuery = { member_id: memberId, create_time_start: '', create_time_end: '' };
-      const [detail, qrText, recharges, consumptions] = await Promise.all([
+      const [detail, qrText, recharges, consumptions, entitlements] = await Promise.all([
         getMemberById(session.token, memberId).catch(err => { throw err; }),
         getMemberBookQrText(session.token, memberId).catch(() => ''),
         fetchAllOrderRows(session.token, ledgerQuery, getRechargeOrders).catch(err => { console.warn('充值记录查询失败:', err); return []; }),
-        fetchAllOrderRows(session.token, ledgerQuery, getConsumptionOrders).catch(err => { console.warn('消费记录查询失败:', err); return []; })
+        fetchAllOrderRows(session.token, ledgerQuery, getConsumptionOrders).catch(err => { console.warn('消费记录查询失败:', err); return []; }),
+        getMemberServiceEntitlements(session.token, memberId).catch(err => { console.warn('权益次数加载失败:', err); return []; })
       ]);
+
+      // 权益次数汇总：后端仅返回 status=0 的未使用权益，每条即 1 次，按项目名称归集计数
+      const entitlementGroups = {};
+      (entitlements || []).forEach(e => {
+        const name = e.itemName || '未命名项目';
+        if (!entitlementGroups[name]) entitlementGroups[name] = { name, count: 0 };
+        entitlementGroups[name].count += 1;
+      });
+      const entitlementSummary = Object.keys(entitlementGroups).map(k => entitlementGroups[k]);
 
       // 在 JS 层预格式化日期（绕过 WXS 兼容问题）
       var dateFields = {
@@ -137,7 +160,8 @@ Page({
         memberDetail: detail,
         qrText,
         recharges,
-        consumptions
+        consumptions,
+        entitlementSummary
       }, () => {
         this.hasLoaded = true;
         this.loadedAt = Date.now();
@@ -190,9 +214,12 @@ Page({
     for (const r of memberRecharges) {
       const record = {
         id: 'recharge-' + r.id,
+        kind: 'recharge',
         label: r.benefitType === 0 ? '套餐充值' : '账户充值',
         amount: r.amount,
         amountText: '+' + formatMoney(r.amount),
+        giftAmount: r.giftAmount || 0,
+        items: groupEntitlementItems(r.items),
         isNegative: false,
         dateText: formatDate(r.time),
         time: r.time
@@ -203,35 +230,62 @@ Page({
         const rechargeYear = new Date(r.time).getFullYear();
         if (rechargeYear === currentYear) yearPrepaidRecharge += r.amount;
       } else {
+        // 账户充值实际到账 = 本金 + 赠送，第一行金额、顶部充值汇总均按到账总额计，口径对齐
+        const credited = r.amount + record.giftAmount;
+        record.amountText = '+' + formatMoney(credited);
         account.push(record);
-        accountRecharge += r.amount;
+        accountRecharge += credited;
         const rechargeYear = new Date(r.time).getFullYear();
-        if (rechargeYear === currentYear) yearAccountRecharge += r.amount;
+        if (rechargeYear === currentYear) yearAccountRecharge += credited;
       }
     }
 
     // 消费记录
     for (const c of memberConsumptions) {
       if (c.payType === 0) continue; // 非余额类记账不参与会员余额计算
+      // 账户消费按实付金额（pay_amount）记账；套餐消费按消费总额（total_amount）记账，与后端账本口径一致
+      const consumeAmount = c.payType === 1 ? (c.payAmount || c.amount) : c.amount;
       const record = {
         id: 'consumption-' + c.id,
+        kind: 'consumption',
         label: c.payType === 2 ? '套餐消费' : '账户消费',
-        amount: c.amount,
-        amountText: '-' + formatMoney(c.amount),
+        amount: consumeAmount,
+        amountText: '-' + formatMoney(consumeAmount),
+        primaryItemName: c.primaryItemName,
+        serviceCount: c.serviceCount,
+        payAmount: c.payAmount,
+        items: groupEntitlementItems(c.items),
         isNegative: true,
         dateText: formatDate(c.time),
         time: c.time
       };
+      // 账户消费：明细单价合计与实付不一致（含优惠）时，明细末尾追加对账提示
+      if (c.payType === 1) {
+        const detailTotal = (record.items || []).reduce(
+          (sum, ent) => sum + (Number(ent.count) || 1) * (Number(ent.price) || 0),
+          0
+        );
+        const paid = record.amount;
+        if (
+          record.items.length > 0 &&
+          Number.isFinite(paid) &&
+          paid > 0 &&
+          Math.abs(detailTotal - paid) > 0.005
+        ) {
+          record.showTotalHint = true;
+          record.totalHintText = formatMoney(detailTotal) + ' · 实付 ' + formatMoney(paid);
+        }
+      }
       if (c.payType === 2) {
         prepaid.push(record);
-        prepaidConsume += c.amount;
+        prepaidConsume += record.amount;
         const consumeYear = new Date(c.time).getFullYear();
-        if (consumeYear === currentYear) yearPrepaidConsume += c.amount;
+        if (consumeYear === currentYear) yearPrepaidConsume += record.amount;
       } else {
         account.push(record);
-        accountConsume += c.amount;
+        accountConsume += record.amount;
         const consumeYear = new Date(c.time).getFullYear();
-        if (consumeYear === currentYear) yearAccountConsume += c.amount;
+        if (consumeYear === currentYear) yearAccountConsume += record.amount;
       }
     }
 
@@ -240,14 +294,22 @@ Page({
 
     // 计算运行余额
     let prepaidBalance = memberDetail.beginningPrepaid || 0;
+    // 项目名 → 截至该笔的累计剩余次数（按时间顺序推算：套餐充值累加、套餐消费累减）
+    const runningEntitlement = {};
     const prepaidWithBalance = prepaid.map(r => {
       prepaidBalance += r.isNegative ? -r.amount : r.amount;
-      return { ...r, runningBalance: prepaidBalance };
+      const items = (r.items || []).map(ent => {
+        const prev = runningEntitlement[ent.name] || 0;
+        const next = r.isNegative ? prev - ent.count : prev + ent.count;
+        runningEntitlement[ent.name] = next;
+        return { ...ent, remain: next };
+      });
+      return { ...r, runningBalance: prepaidBalance, items };
     });
 
     let accountBalance = memberDetail.beginningBalance || 0;
     const accountWithBalance = account.map(r => {
-      accountBalance += r.isNegative ? -r.amount : r.amount;
+      accountBalance += r.isNegative ? -r.amount : (r.amount + (r.giftAmount || 0));
       return { ...r, runningBalance: accountBalance };
     });
 
